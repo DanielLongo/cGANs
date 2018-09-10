@@ -181,6 +181,7 @@ def show_image(images):
     images_np = images.detach().numpy().squeeze()
     plt.imshow(images_np[0])
     plt.show()
+
 def save_images(images, epoch, i):
     fig = plt.figure(figsize=(4, 4))
     gs = gridspec.GridSpec(4, 4)
@@ -201,9 +202,9 @@ def save_images(images, epoch, i):
     plt.close(fig)
 
     
-def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=-1):
-    generator_optimizer = create_optimizer(generator, lr=1e-3, betas=(.5, .999))
-    discriminator_optimizer = create_optimizer(discriminator, lr=1e-3, betas=(.5, .999))
+def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=-1, lr=0.0002):
+    generator_optimizer = create_optimizer(generator, lr=lr, betas=(.5, .999))
+    discriminator_optimizer = create_optimizer(discriminator, lr=lr, betas=(.5, .999))
     BCE_loss = nn.BCELoss()
     iters = 0
     onehot = torch.zeros(10, 10)
@@ -216,7 +217,8 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
         fill[i, i, :, :] = 1
     for epoch in range(epochs):
         if (epoch+1) == 11:
-            generator_optimizer.param_groups[0]["lr"] /= 10
+            #IS ONLY [0] VALID
+            generator_optimizer.param_groups[0]["lr"] /= 10 
             discriminator_optimizer.param_groups[0]["lr"] /= 10
 
         if (epoch+1) == 16:
