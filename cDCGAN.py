@@ -4,9 +4,13 @@ import torchvision.datasets
 import numpy as np
 import numpy as np
 import matplotlib.pyplot as plt
-
-batch_size = 16
+import torch.nn.functional as F
+import matplotlib.gridspec as gridspec
+batch_size = 128
 plt.rcParams['image.cmap'] = 'gray'
+
+torch.set_default_tensor_type('torch.cuda.FloatTensor')
+torch.backends.cudnn.benchmark = True
 
 transform = torchvision.transforms.ToTensor()
 mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=True, transform=transform)
@@ -30,42 +34,105 @@ class Unflatten(nn.Module):
         unflattened = input.view(-1, self.C, self.H, self.W)
         return unflattened
     
-def generate_nosie(batch_size, dim=96):
+def generate_nosie(batch_size, dim=100):
     noise = torch.rand(batch_size, dim) * 2 - 1
+    noise = torch.rand(batch_size, dim, 1, 1)
     return noise
 
-def CNN():
-    model = nn.Sequential(
-        nn.Conv2d(1, 32, [5,5], stride=[1,1]),
-        nn.LeakyReLU(negative_slope=.01),
-        nn.MaxPool2d([2,2], stride=[2,2]),
-        nn.Conv2d(32, 64, [5,5], stride=[1,1]),
-        nn.LeakyReLU(negative_slope=.01),
-        nn.MaxPool2d([2,2], stride=[2,2]),
-        Flatten(),
-        nn.Linear((4*4*64), (4*4*64)), 
-        nn.LeakyReLU(negative_slope=.01),
-        nn.Linear((4*4*64), 1)
-    )
-    return model
+class Discriminator(nn.Module):
+    def __init__(self):
+        super(Discriminator, self).__init__()
+        self.layer1_input = nn.Sequential(
+            nn.Conv2d(1, 32, [4,4], stride=[2,2]),
+            nn.LeakyReLU(negative_slope=.2)#,
+            # nn.MaxPool2d([2,2], stride=[2,2])
+        )
+        self.layer1_labels = nn.Sequential(
+            nn.Conv2d(10, 32, [4,4], stride=[2,2]),
+            nn.LeakyReLU(negative_slope=.2)#,
+            # nn.MaxPool2d([2,2], stride=[2,2])
+        )
 
-def generator(noise_dim=96):
-    model = nn.Sequential(
-        nn.Linear(noise_dim, 1024),
-        nn.ReLU(),
-        nn.BatchNorm1d(1024),
-        nn.Linear(1024, (7*7*128)),
-        nn.ReLU(),
-        nn.BatchNorm1d(7*7*128),
-        Unflatten(),
-        nn.ConvTranspose2d(128, 64, [4,4], stride=[2,2], padding=1),
-        nn.ReLU(),
-        nn.BatchNorm2d(64),
-        nn.ConvTranspose2d(64, 1, [4,4], stride=[2,2], padding=1),
-        nn.Tanh(),
-        Flatten()
-    )
-    return model
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(64, 128, [4,4], stride=[2,2]),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(negative_slope=.2)
+            # nn.MaxPool2d([2,2], stride=[2,2])
+        )
+        self.layer3 = nn.Sequential(
+            nn.Conv2d(128, 256, [4,4], stride=[1,1]),
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(negative_slope=.2))
+
+        self.layer4 = nn.Sequential(
+            nn.Conv2d(256, 1, [2,2], stride=[2,2]),
+            torch.nn.Sigmoid())
+
+    def forward(self, input, labels):
+        # print("input", input.shape)
+        # print("labels", labels.shape)
+        x = self.layer1_input(input)
+        y = self.layer1_labels(labels)
+        # print("x", x.shape)
+        # print("y", y.shape)
+        out = torch.cat([x, y], 1)
+        # print("out1", out.shape)
+        out = self.layer2(out)
+        # print("out2", out.shape)
+        out = self.layer3(out)
+        # print("out3", out.shape)
+        out = self.layer4(out)
+        # print("out4", out.shape)
+        return out
+
+# class Generator(nn.Module):
+#     def __init__(self, noise_dim=96):
+#         super(Generator, self).__init__()
+#         self.noise_dim = noise_dim
+#         self.layer1_input = nn.ConvTranspose2d(96, 256, )
+#     def forward(self, input, labels):
+#         x = 
+
+
+class Generator(nn.Module):
+    # initializers
+    def __init__(self):
+        super(Generator, self).__init__()
+        self.layer1_input = nn.Sequential(
+            nn.ConvTranspose2d(100, 256, [4,4], stride=[1,1]),
+            nn.BatchNorm2d(256),
+            nn.ReLU())
+        self.layer1_labels = nn.Sequential(
+            nn.ConvTranspose2d(10, 256, [4,4], stride=[1,1]),
+            nn.BatchNorm2d(256),
+            nn.ReLU())
+        self.layer2 = nn.Sequential(
+            nn.ConvTranspose2d(512, 256, [4,4], stride=[2,2]),
+            nn.BatchNorm2d(256),
+            nn.ReLU())
+        self.layer3 = nn.Sequential(
+            nn.ConvTranspose2d(256, 128, [4,4], stride=[2,2]),
+            nn.BatchNorm2d(128))
+        self.layer4 = nn.Sequential(
+            nn.ConvTranspose2d(128, 1, [7,7], stride=[1,1]),
+            nn.Tanh())
+
+    def forward(self, input, labels):
+        # print("input", input.shape)
+        # print("label", labels.shape)
+        x = self.layer1_input(input)
+        y = self.layer1_labels(labels)
+        # print("x", x.shape)
+        # print("y", y.shape)
+        out = torch.cat([x, y], 1)
+        # print("out1", out.shape)
+        out = self.layer2(out)
+        # print("out2", out.shape)
+        out = self.layer3(out)
+        # print("out3", out.shape)
+        out = self.layer4(out)
+        # print("out4", out.shape)
+        return out
 
 def create_optimizer(model, lr=.01, betas=None):
     if betas == None:
@@ -91,43 +158,95 @@ def show_image(images):
     images_np = images.detach().numpy().squeeze()
     plt.imshow(images_np[0])
     plt.show()
+def save_images(images, epoch, i):
+    fig = plt.figure(figsize=(4, 4))
+    gs = gridspec.GridSpec(4, 4)
+    gs.update(wspace=.05, hspace=.05)
+
+    images = images.data.numpy()[:16]
+    for img_num, sample in enumerate(images):
+        ax = plt.subplot(gs[img_num])
+        plt.axis('off')
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.set_aspect('equal')
+        plt.imshow(sample.reshape(28, 28), cmap='Greys_r')
+
+    filename = "test-" + str(epoch) + "-" + str(i) 
+    # print("file logged")
+    plt.savefig("./generated_images/" + filename, bbox_inches="tight" )
+    plt.close(fig)
+
     
 def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=-1):
     generator_optimizer = create_optimizer(generator, lr=1e-3, betas=(.5, .999))
     discriminator_optimizer = create_optimizer(discriminator, lr=1e-3, betas=(.5, .999))
+    BCE_loss = nn.BCELoss()
     iters = 0
+    onehot = torch.zeros(10, 10)
+    onehot = onehot.scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
+    fill = torch.zeros([10, 10, 28, 28])
+    for i in range(10):
+        fill[i, i, :, :] = 1
     for epoch in range(epochs):
+        if (epoch+1) == 11:
+            generator_optimizer.param_groups[0]["l"] /= 10
+            discriminator_optimizer.param_groups[0]["l"] /= 10
+
+        if (epoch+1) == 16:
+            generator_optimizer.param_groups[0]["l"] /= 10
+            discriminator_optimizer.param_groups[0]["l"] /= 10
+
         for i, (examples, labels) in enumerate(image_loader):
             if i == num_train_batches:
                 break
+            if examples.shape[0] != batch_size:
+                continue
+
             generator_optimizer.zero_grad()
             discriminator_optimizer.zero_grad()
-            z = generate_nosie(batch_size)
-            images_fake = generator(z)
-            images_fake_unflattened = images_fake.view(images_fake.shape[0], 1, 28, 28)
-            scores_fake = discriminator(images_fake_unflattened)
 
-            g_cost = generator_loss(scores_fake)
-            g_cost.backward(retain_graph=True)
+            y_fill = fill[labels]
+            # # print("y fill", y_fill.shape)
+            # print("examples", examples.shape)
+            d_logits = discriminator(examples, y_fill).squeeze()
+            # print("d_logits", d_logits.shape)
+            d_real_loss = BCE_loss(d_logits, torch.ones(batch_size))
+
+            z = generate_nosie(batch_size)
+            y_rand = (torch.rand(batch_size, 1) * 10).type(torch.LongTensor).squeeze()
+            # print("y_rand", y_rand.shape)
+            y_label = onehot[y_rand]
+            y_fill = fill[y_rand]
+            # # print("y ffill", y_fill[:,:,0,0].shape)
+            images_fake = generator(z, y_label)
+            d_result = discriminator(images_fake, y_fill).squeeze()
+            d_fake_loss = BCE_loss(d_result, torch.zeros(batch_size))
+            d_fake_loss_avg = d_result.data.mean()
+            # print("d real loss", d_real_loss)
+            # print("d fake loss", d_fake_loss)
+            d_loss = d_real_loss + d_fake_loss
+            d_loss.backward(retain_graph=True)
+            discriminator_optimizer.step()
+
+            g_loss = BCE_loss(d_result, torch.ones(batch_size))
+            g_loss.backward(retain_graph=True)
             generator_optimizer.step()
 
-            scores_real = discriminator(examples)
-            d_cost = discriminator_loss(scores_real, scores_fake)
-            d_cost.backward()
-            discriminator_optimizer.step()
             iters += 1
-            if iters % 100  == 0:
+            if iters % 1000  == 0:
                 print("Iteration:", iters)
-                print("Discriminator Cost", d_cost)
-                print("Generator Cost", g_cost)
-                show_image(images_fake_unflattened)
+                print("Epoch:", epoch)
+                print("Discriminator Cost", d_loss.detach().numpy())
+                print("Generator Cost", g_loss.detach().numpy())
+                save_images(images_fake, epoch, iters)
                 
 
     return generator, discriminator
 
-generator = generator()
-discriminator = CNN()
+generator = Generator()
+discriminator = Discriminator()
 image_loader = train_loader
 epochs = 5
-num_train_batches = 1000
+num_train_batches = -1
 train_gan(generator, discriminator, image_loader, epochs, num_train_batches=num_train_batches)
