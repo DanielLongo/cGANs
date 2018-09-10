@@ -192,12 +192,12 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
         fill[i, i, :, :] = 1
     for epoch in range(epochs):
         if (epoch+1) == 11:
-            generator_optimizer.param_groups[0]["l"] /= 10
-            discriminator_optimizer.param_groups[0]["l"] /= 10
+            generator_optimizer.param_groups[0]["lr"] /= 10
+            discriminator_optimizer.param_groups[0]["lr"] /= 10
 
         if (epoch+1) == 16:
-            generator_optimizer.param_groups[0]["l"] /= 10
-            discriminator_optimizer.param_groups[0]["l"] /= 10
+            generator_optimizer.param_groups[0]["lr"] /= 10
+            discriminator_optimizer.param_groups[0]["lr"] /= 10
 
         for i, (examples, labels) in enumerate(image_loader):
             examples = examples.cuda()
