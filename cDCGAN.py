@@ -3,6 +3,8 @@ from torch import nn
 import torchvision.datasets
 import numpy as np
 import numpy as np
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import torch.nn.functional as F
 import matplotlib.gridspec as gridspec
@@ -163,7 +165,7 @@ def save_images(images, epoch, i):
     gs = gridspec.GridSpec(4, 4)
     gs.update(wspace=.05, hspace=.05)
 
-    images = images.data.numpy()[:16]
+    images = images.data.data.cpu().numpy()[:16]
     for img_num, sample in enumerate(images):
         ax = plt.subplot(gs[img_num])
         plt.axis('off')
@@ -184,7 +186,7 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
     BCE_loss = nn.BCELoss()
     iters = 0
     onehot = torch.zeros(10, 10)
-    onehot = onehot.scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
+    onehot = onehot.scatter_(1, torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
     fill = torch.zeros([10, 10, 28, 28])
     for i in range(10):
         fill[i, i, :, :] = 1
@@ -198,6 +200,7 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
             discriminator_optimizer.param_groups[0]["l"] /= 10
 
         for i, (examples, labels) in enumerate(image_loader):
+            examples = examples.cuda()
             if i == num_train_batches:
                 break
             if examples.shape[0] != batch_size:
@@ -237,8 +240,8 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
             if iters % 1000  == 0:
                 print("Iteration:", iters)
                 print("Epoch:", epoch)
-                print("Discriminator Cost", d_loss.detach().numpy())
-                print("Generator Cost", g_loss.detach().numpy())
+                print("Discriminator Cost", d_loss.cpu().detach().numpy())
+                print("Generator Cost", g_loss.cpu().detach().numpy())
                 save_images(images_fake, epoch, iters)
                 
 
