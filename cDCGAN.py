@@ -233,20 +233,19 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
             g_loss.backward(retain_graph=True)
             generator_optimizer.step()
 
-            iters += 1
             if iters % 1000  == 0:
                 print("Iteration:", iters)
                 print("Epoch:", epoch)
                 print("Discriminator Cost", d_loss.detach().numpy())
                 print("Generator Cost", g_loss.detach().numpy())
                 save_images(images_fake, epoch, iters)
-                
+            iters += 1                
 
     return generator, discriminator
 
 generator = Generator()
 discriminator = Discriminator()
 image_loader = train_loader
-epochs = 5
+epochs = 25
 num_train_batches = -1
 train_gan(generator, discriminator, image_loader, epochs, num_train_batches=num_train_batches)
