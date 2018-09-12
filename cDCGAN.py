@@ -47,25 +47,25 @@ class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
         self.layer1_input = nn.Sequential(
-            nn.Conv2d(1, 32, [4,4], stride=[2,2]),
+            nn.Conv2d(1, 64, [4,4], stride=[2,2]),
             nn.LeakyReLU(negative_slope=.2)#,
             # nn.MaxPool2d([2,2], stride=[2,2])
         )
         self.layer1_labels = nn.Sequential(
-            nn.Conv2d(10, 32, [4,4], stride=[2,2]),
+            nn.Conv2d(10, 64, [4,4], stride=[2,2]),
             nn.LeakyReLU(negative_slope=.2)#,
             # nn.MaxPool2d([2,2], stride=[2,2])
         )
 
         self.layer2 = nn.Sequential(
-            nn.Conv2d(64, 128, [4,4], stride=[2,2]),
-            nn.BatchNorm2d(128),
+            nn.Conv2d(128, 256, [4,4], stride=[2,2]),
+            nn.BatchNorm2d(256),
             nn.LeakyReLU(negative_slope=.2)
             # nn.MaxPool2d([2,2], stride=[2,2])
         )
         self.layer3 = nn.Sequential(
-            nn.Conv2d(128, 256, [4,4], stride=[1,1]),
-            nn.BatchNorm2d(256),
+            nn.Conv2d(256, 512, [4,4], stride=[1,1]),
+            nn.BatchNorm2d(512),
             nn.LeakyReLU(negative_slope=.2))
 
         # self.layer4 = nn.Sequential(
@@ -73,15 +73,19 @@ class Discriminator(nn.Module):
         #     torch.nn.Sigmoid())
 
         self.layer4 = nn.Sequential(
-            nn.Conv2d(256, 128, [2,2], stride=[2,2]),
-            nn.BatchNorm2d(128))
+            nn.Conv2d(512, 256, [2,2], stride=[2,2]),
+            nn.BatchNorm2d(256))
 
         self.fc1 = nn.Sequential(
-            nn.Linear(128, 64),
+            nn.Linear(256, 128),
             nn.ReLU())
 
         self.fc2 = nn.Sequential(
-            nn.Linear(64,1),
+            nn.Linear(128, 64),
+            nn.ReLU())
+
+        self.fc3 = nn.Sequential(
+            nn.Linear(64, 1),
             nn.Sigmoid())
 
     def forward(self, input, labels):
