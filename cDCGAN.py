@@ -10,8 +10,8 @@ import torch.nn.functional as F
 import matplotlib.gridspec as gridspec
 batch_size = 128
 plt.rcParams['image.cmap'] = 'gray'
-use_cuda = False
-
+#use_cuda = False
+use_cuda = True
 if use_cuda:
     torch.set_default_tensor_type('torch.cuda.FloatTensor')
     torch.backends.cudnn.benchmark = True
