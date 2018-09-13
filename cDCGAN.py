@@ -1,22 +1,32 @@
 import torch
 from torch import nn
 import torchvision.datasets
+from torchvision import transforms
 import numpy as np
 import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-import torch.nn.functional as F
+# import torch.nn.functional as F
 import matplotlib.gridspec as gridspec
 batch_size = 128
 plt.rcParams['image.cmap'] = 'gray'
 #use_cuda = False
 use_cuda = True
-if use_cuda:
-    torch.set_default_tensor_type('torch.cuda.FloatTensor')
+try:
+    torch.set_default_tensor_type("torch.cuda.FloatTensor")
     torch.backends.cudnn.benchmark = True
+except TypeError:
+    use_cuda = False
+# if use_cuda:
+    # torch.set_default_tensor_type('torch.cuda.FloatTensor')
+    # torch.backends.cudnn.benchmark = True
 
-transform = torchvision.transforms.ToTensor()
+# transform = torchvision.transforms.ToTensor()
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
+    ])
 mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=True, transform=transform)
 train_loader = torch.utils.data.DataLoader(mnist_train, batch_size=batch_size)
 mnist_test = torchvision.datasets.MNIST('./MNIST_data', train=False, download=True, transform=transform)
@@ -87,6 +97,12 @@ class Discriminator(nn.Module):
         self.fc3 = nn.Sequential(
             nn.Linear(64, 1),
             nn.Sigmoid())
+
+    # def normal_init(m, mean, std):
+    def weight_init(m, mean, std):
+        if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
+            m.weight.data.normal_(mean, std)
+            m.bias.data.zero_()
 
     def forward(self, input, labels):
         # print("input", input.shape)
@@ -161,6 +177,11 @@ class Generator(nn.Module):
         out = self.layer4(out)
         # print("out4", out.shape)
         return out
+    # def normal_init(m, mean, std):
+    def weight_init(m, mean, std):
+        if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
+            m.weight.data.normal_(mean, std)
+            m.bias.data.zero_()
 
 def create_optimizer(model, lr=.01, betas=None):
     if betas == None:
@@ -279,7 +300,9 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
     return generator, discriminator
 
 generator = Generator()
+generator.weight_init(mean=0.0, std=0.02)
 discriminator = Discriminator()
+discriminator.weight_init(mean=0.0, std=0.02)
 image_loader = train_loader
 epochs = 50
 num_train_batches = -1
