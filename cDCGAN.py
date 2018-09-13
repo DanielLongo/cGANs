@@ -110,6 +110,7 @@ class Discriminator(nn.Module):
         # print("fc1", out.shape)
         out = self.fc2(out)
         # print("fc2", out.shape)
+        out = self.fc3(out)
         return out
 
 # class Generator(nn.Module):
@@ -280,6 +281,6 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
 generator = Generator()
 discriminator = Discriminator()
 image_loader = train_loader
-epochs = 25
+epochs = 50
 num_train_batches = -1
 train_gan(generator, discriminator, image_loader, epochs, num_train_batches=num_train_batches)
