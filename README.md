@@ -4,4 +4,3 @@ For information on cGANs view https://arxiv.org/abs/1802.05637 and https://arxiv
 TODO:
 optimize/stabilize architecture
 
-cGAN output epoch 12 best quality
