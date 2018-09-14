@@ -160,12 +160,17 @@ def show_image(images):
     images_np = images.detach().numpy().squeeze()
     plt.imshow(images_np[0])
     plt.show()
-def save_images(images, epoch, i):
-    fig = plt.figure(figsize=(4, 4))
-    gs = gridspec.GridSpec(4, 4)
+def save_images(generator, images, epoch, i):
+    fig = plt.figure(figsize=(3, 3))
+    gs = gridspec.GridSpec(3, 3)
     gs.update(wspace=.05, hspace=.05)
+    z = generate_nosie(9)
+    onehot = torch.zeros(10, 10).scatter_(1, torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
+    fill = torch.cuda.LongTensor([1, 2, 3, 4, 5, 6, 7, 8, 9])
+    fill = onehot[fill]
 
-    images = images.data.data.cpu().numpy()[:16]
+    images_fake = generator(z, fill)
+    # images = images.data.data.cpu().numpy()[:16]
     for img_num, sample in enumerate(images):
         ax = plt.subplot(gs[img_num])
         plt.axis('off')
@@ -241,7 +246,7 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
                 print("Epoch:", epoch)
                 print("Discriminator Cost", d_loss.cpu().detach().numpy())
                 print("Generator Cost", g_loss.cpu().detach().numpy())
-                save_images(images_fake, epoch, iters)
+                save_images(generator, epoch, iters)
             iters += 1                
 
     return generator, discriminator
