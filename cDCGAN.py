@@ -212,7 +212,7 @@ def save_images(generator, images, epoch, i):
     fig = plt.figure(figsize=(3, 3))
     gs = gridspec.GridSpec(3, 3)
 
-def save_images(images, epoch, i):
+def save_images(generator, epoch, i):
     fig = plt.figure(figsize=(4, 4))
     gs = gridspec.GridSpec(4, 4)
     gs.update(wspace=.05, hspace=.05)
@@ -223,7 +223,7 @@ def save_images(images, epoch, i):
 
     images_fake = generator(z, fill)
     # images = images.data.data.cpu().numpy()[:16]
-    for img_num, sample in enumerate(images):
+    for img_num, sample in enumerate(images_fake):
         ax = plt.subplot(gs[img_num])
         plt.axis('off')
         ax.set_xticklabels([])
