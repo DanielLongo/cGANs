@@ -222,7 +222,7 @@ def save_images(generator, epoch, i):
     fill = onehot[fill]
 
     images_fake = generator(z, fill)
-    images_fake = images.data.data.cpu().numpy()
+    images_fake = images_fake.data.data.cpu().numpy()
     for img_num, sample in enumerate(images_fake):
         ax = plt.subplot(gs[img_num])
         plt.axis('off')
