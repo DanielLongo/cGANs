@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 # import torch.nn.functional as F
 import matplotlib.gridspec as gridspec
 batch_size = 128
+img_size = 32
 plt.rcParams['image.cmap'] = 'gray'
 #use_cuda = False
 use_cuda = True
@@ -24,6 +25,7 @@ except TypeError:
 
 # transform = torchvision.transforms.ToTensor()
 transform = transforms.Compose([
+    transforms.Scale(img_size)
     transforms.ToTensor(),
     transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
@@ -31,7 +33,7 @@ transform = transforms.Compose([
 mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=True, transform=transform)
 train_loader = torch.utils.data.DataLoader(mnist_train, batch_size=batch_size, shuffle=True)
 mnist_test = torchvision.datasets.MNIST('./MNIST_data', train=False, download=True, transform=transform)
-test_loader = torch.utils.data.DataLoader(mnist_test, batch_size=batch_size, shuffle=True)
+test_loader = torch.utils.data.DataLoader(mnist_test, batch_size=batch_size,  shuffle=True)
 
 class Flatten(nn.Module):
     def forward(self, input):
@@ -77,7 +79,7 @@ class DiscrimanatorOrig(nn.Module):
             nn.LeakyReLU(negative_slope=.2)
         )
         self.layer4 = nn.Sequential (
-            nn.Conv2d(512, 1, [1,1], stride=[2,2]),
+            nn.Conv2d(512, 1, [4,4], stride=[1,1]),
             nn.Sigmoid())
 
     def forward(self, input, labels):
@@ -199,7 +201,7 @@ class Generator(nn.Module):
             nn.ConvTranspose2d(256, 128, [4,4], stride=[2,2]),
             nn.BatchNorm2d(128))
         self.layer4 = nn.Sequential(
-            nn.ConvTranspose2d(128, 1, [7,7], stride=[1,1]),
+            nn.ConvTranspose2d(128, 1, [4,4], stride=[2,2]),
             nn.Tanh())
 
     def forward(self, input, labels):
@@ -270,7 +272,7 @@ def save_images(generator, epoch, i):
         ax.set_xticklabels([])
         ax.set_yticklabels([])
         ax.set_aspect('equal')
-        plt.imshow(sample.reshape(28, 28), cmap='Greys_r')
+        plt.imshow(sample.reshape(32, 32), cmap='Greys_r')
 
     filename = "test-" + str(epoch) + "-" + str(i) 
     # print("file logged")
@@ -292,21 +294,21 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
         onehot = onehot.scatter_(1, torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
     else:
         onehot = onehot.scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
-    fill = torch.zeros([10, 10, 28, 28])
+    fill = torch.zeros([10, 10, 32, 32])
     for i in range(10):
         fill[i, i, :, :] = 1
     for epoch in range(epochs):
-        # if (epoch+1) == 11:
-        #     #IS ONLY [0] VALID
-        #     generator_optimizer.param_groups[0]["lr"] /= 10 
-        #     discriminator_optimizer.param_groups[0]["lr"] /= 10
+        if (epoch+1) == 11:
+            #IS ONLY [0] VALID
+            generator_optimizer.param_groups[0]["lr"] /= 10 
+            discriminator_optimizer.param_groups[0]["lr"] /= 10
 
-        # if (epoch+1) == 16:
-        #     generator_optimizer.param_groups[0]["lr"] /= 10
-        #     discriminator_optimizer.param_groups[0]["lr"] /= 10
-        if (epoch == 5) or (epoch == 10):
-            generator_optimizer.param_groups[0]["lr"] /= 2
-            discriminator_optimizer.param_groups[0]["lr"] /= 2
+        if (epoch+1) == 16:
+            generator_optimizer.param_groups[0]["lr"] /= 10
+            discriminator_optimizer.param_groups[0]["lr"] /= 10
+        # if (epoch == 5) or (epoch == 10):
+        #     generator_optimizer.param_groups[0]["lr"] /= 2
+        #     discriminator_optimizer.param_groups[0]["lr"] /= 2
         for i, (examples, labels) in enumerate(image_loader):
             if use_cuda:
                 examples = examples.cuda()
