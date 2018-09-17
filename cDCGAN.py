@@ -25,7 +25,7 @@ except TypeError:
 
 # transform = torchvision.transforms.ToTensor()
 transform = transforms.Compose([
-    transforms.Scale(img_size)
+    transforms.Resize(img_size),
     transforms.ToTensor(),
     transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
@@ -66,7 +66,7 @@ class DiscrimanatorOrig(nn.Module):
         self.layer1_labels = nn.Sequential(
             nn.Conv2d(10, 64, [4,4], stride=[2,2]),
             nn.LeakyReLU(negative_slope=.2)
-        ) 
+        )
 
         self.layer2 = nn.Sequential(
             nn.Conv2d(128, 256, [4,4], stride=[2,2]),
@@ -74,28 +74,32 @@ class DiscrimanatorOrig(nn.Module):
             nn.LeakyReLU(negative_slope=.2)
         )
         self.layer3 = nn.Sequential(
-            nn.Conv2d(256, 512, [2,2], stride=[2,2]),
+            nn.Conv2d(256, 512, [4,4], stride=[2,2]),
             nn.BatchNorm2d(512),
             nn.LeakyReLU(negative_slope=.2)
         )
         self.layer4 = nn.Sequential (
-            nn.Conv2d(512, 1, [4,4], stride=[1,1]),
+            nn.Conv2d(512, 1, [2,2], stride=[1,1]),
             nn.Sigmoid())
 
     def forward(self, input, labels):
         x = self.layer1_input(input)
         y = self.layer1_labels(labels)
         out = torch.cat([x,y], 1)
+#        print("Discrimnator")
+ #       print("out1", out.shape)
         out = self.layer2(out)
+  #      print("out2", out.shape)
         out = self.layer3(out)
+   #     print("out3", out.shape)
         out = self.layer4(out)
+    #    print("out4", out.shape)
         return out
 
     def weight_init(m, mean, std):
         if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
             m.weight.data.normal_(mean, std)
             m.bias.data.zero_()
-        
 class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
@@ -198,13 +202,14 @@ class Generator(nn.Module):
             nn.BatchNorm2d(256),
             nn.ReLU())
         self.layer3 = nn.Sequential(
-            nn.ConvTranspose2d(256, 128, [4,4], stride=[2,2]),
+            nn.ConvTranspose2d(256, 128, [2,2], stride=[2,2], padding=2),
             nn.BatchNorm2d(128))
         self.layer4 = nn.Sequential(
-            nn.ConvTranspose2d(128, 1, [4,4], stride=[2,2]),
+            nn.ConvTranspose2d(128, 1, [2,2], stride=[2,2]),
             nn.Tanh())
 
     def forward(self, input, labels):
+#        print("generator")
         # print("input", input.shape)
         # print("label", labels.shape)
         x = self.layer1_input(input)
@@ -212,13 +217,13 @@ class Generator(nn.Module):
         # print("x", x.shape)
         # print("y", y.shape)
         out = torch.cat([x, y], 1)
-        # print("out1", out.shape)
+     #   print("out1", out.shape)
         out = self.layer2(out)
-        # print("out2", out.shape)
+      #  print("out2", out.shape)
         out = self.layer3(out)
-        # print("out3", out.shape)
+       # print("out3", out.shape)
         out = self.layer4(out)
-        # print("out4", out.shape)
+        #print("out4", out.shape)
         return out
     # def normal_init(m, mean, std):
     def weight_init(m, mean, std):
@@ -281,12 +286,12 @@ def save_images(generator, epoch, i):
 
     
 def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=-1, lr=0.0002):
-    generator_lr = .0002
-    discriminator_lr = .0001
-    generator_optimizer = create_optimizer(generator, lr=generator_lr, betas=(.5, .999))
-    discriminator_optimizer = create_optimizer(discriminator, lr=discriminator_lr, betas=(.5, .999))
-    # generator_optimizer = create_optimizer(generator, lr=lr, betas=(.5, .999))
-    # discriminator_optimizer = create_optimizer(discriminator, lr=lr, betas=(.5, .999))
+    #generator_lr = .0002
+    #discriminator_lr = .0001
+    #generator_optimizer = create_optimizer(generator, lr=generator_lr, betas=(.5, .999))
+    #discriminator_optimizer = create_optimizer(discriminator, lr=discriminator_lr, betas=(.5, .999))
+    generator_optimizer = create_optimizer(generator, lr=lr, betas=(.5, .999))
+    discriminator_optimizer = create_optimizer(discriminator, lr=lr, betas=(.5, .999))
     BCE_loss = nn.BCELoss()
     iters = 0
     onehot = torch.zeros(10, 10)
