@@ -258,7 +258,7 @@ def save_images(generator, epoch, i):
     fig = plt.figure(figsize=(10, 10))
     gs = gridspec.GridSpec(10, 10)
     gs.update(wspace=.05, hspace=.05)
-    z = generate_nosie(10)
+    z = generate_nosie(100)
     onehot = torch.zeros(10, 10).scatter_(1, torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
     fill = torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9] * 10)
     fill = onehot[fill]
@@ -321,11 +321,12 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
             d_real_loss = BCE_loss(d_logits, torch.ones(batch_size))
 
             z = generate_nosie(batch_size)
-            y_rand = (torch.rand(batch_size, 1) * 10).type(torch.LongTensor).squeeze()
+            # print("batch_size", batch_size)
+            y_rand = (torch.rand(batch_size, 1) * 10).type(torch.cuda.LongTensor).squeeze()
             # print("y_rand", y_rand.shape)
             y_label = onehot[y_rand]
             y_fill = fill[y_rand]
-            # # print("y ffill", y_fill[:,:,0,0].shape)
+            # print("y_label", y_label.shape)
             images_fake = generator(z, y_label)
             d_result = discriminator(images_fake, y_fill).squeeze()
             d_fake_loss = BCE_loss(d_result, torch.zeros(batch_size))
