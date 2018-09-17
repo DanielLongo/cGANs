@@ -204,6 +204,8 @@ class Generator(nn.Module):
     def forward(self, input, labels):
         # print("input", input.shape)
         # print("label", labels.shape)
+        print("x shape", x.shape)
+        print("y shape", y.shape)
         x = self.layer1_input(input)
         y = self.layer1_labels(labels)
         # print("x", x.shape)
