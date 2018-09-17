@@ -27,6 +27,7 @@ transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
+
 mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=True, transform=transform, shuffle=True)
 train_loader = torch.utils.data.DataLoader(mnist_train, batch_size=batch_size)
 mnist_test = torchvision.datasets.MNIST('./MNIST_data', train=False, download=True, transform=transform, shuffle=True)
@@ -278,8 +279,12 @@ def save_images(generator, epoch, i):
 
     
 def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=-1, lr=0.0002):
-    generator_optimizer = create_optimizer(generator, lr=lr, betas=(.5, .999))
-    discriminator_optimizer = create_optimizer(discriminator, lr=lr, betas=(.5, .999))
+    generator_lr = .0002
+    discriminator_lr = .0001
+    generator_optimizer = create_optimizer(generator, lr=generator_lr, betas=(.5, .999))
+    discriminator_optimizer = create_optimizer(discriminator, lr=discriminator_lr, betas=(.5, .999))
+    # generator_optimizer = create_optimizer(generator, lr=lr, betas=(.5, .999))
+    # discriminator_optimizer = create_optimizer(discriminator, lr=lr, betas=(.5, .999))
     BCE_loss = nn.BCELoss()
     iters = 0
     onehot = torch.zeros(10, 10)
@@ -291,15 +296,17 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
     for i in range(10):
         fill[i, i, :, :] = 1
     for epoch in range(epochs):
-        if (epoch+1) == 11:
-            #IS ONLY [0] VALID
-            generator_optimizer.param_groups[0]["lr"] /= 10 
-            discriminator_optimizer.param_groups[0]["lr"] /= 10
+        # if (epoch+1) == 11:
+        #     #IS ONLY [0] VALID
+        #     generator_optimizer.param_groups[0]["lr"] /= 10 
+        #     discriminator_optimizer.param_groups[0]["lr"] /= 10
 
-        if (epoch+1) == 16:
-            generator_optimizer.param_groups[0]["lr"] /= 10
-            discriminator_optimizer.param_groups[0]["lr"] /= 10
-
+        # if (epoch+1) == 16:
+        #     generator_optimizer.param_groups[0]["lr"] /= 10
+        #     discriminator_optimizer.param_groups[0]["lr"] /= 10
+        if (epoch == 5) or (epoch == 10):
+            generator_optimizer.param_groups[0]["lr"] /= 2
+            discriminator_optimizer.param_groups[0]["lr"] /= 2
         for i, (examples, labels) in enumerate(image_loader):
             if use_cuda:
                 examples = examples.cuda()
