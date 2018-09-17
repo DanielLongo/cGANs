@@ -253,8 +253,8 @@ def show_image(images):
     plt.show()
 
 def save_images(generator, images, epoch, i):
-    fig = plt.figure(figsize=(3, 3))
-    gs = gridspec.GridSpec(3, 3)
+    fig = plt.figure(figsize=(10, 10))
+    gs = gridspec.GridSpec(10, 10)
 
 def save_images(generator, epoch, i):
     fig = plt.figure(figsize=(4, 3))
@@ -262,7 +262,7 @@ def save_images(generator, epoch, i):
     gs.update(wspace=.05, hspace=.05)
     z = generate_nosie(10)
     onehot = torch.zeros(10, 10).scatter_(1, torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
-    fill = torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
+    fill = torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9] * 10)
     fill = onehot[fill]
 
     images_fake = generator(z, fill)
