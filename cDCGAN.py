@@ -308,7 +308,6 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
             if examples.shape[0] != batch_size:
                 continue
 
-            generator_optimizer.zero_grad()
             discriminator_optimizer.zero_grad()
 
             y_fill = fill[labels]
@@ -334,7 +333,15 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
             d_loss = d_real_loss + d_fake_loss
             d_loss.backward(retain_graph=True)
             discriminator_optimizer.step()
-
+            
+            # train generator sepretly
+            generator_optimizer.zero_grad()
+            z = generate_nosie(batch_size)
+            y_rand = (torch.rand(batch_size, 1) * 10).type(torch.cuda.LongTensor).squeeze()
+            y_label = onehot[y_rand]
+            y_fill = fill[y_rand]
+            images_fake = generator(z, y_label)
+            d_result = discriminator(images_fake, y_fill).squeeze()
             g_loss = BCE_loss(d_result, torch.ones(batch_size))
             g_loss.backward(retain_graph=True)
             generator_optimizer.step()
