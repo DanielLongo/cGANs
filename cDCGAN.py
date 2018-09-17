@@ -28,10 +28,10 @@ transform = transforms.Compose([
     transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
 
-mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=True, transform=transform, shuffle=True)
-train_loader = torch.utils.data.DataLoader(mnist_train, batch_size=batch_size)
-mnist_test = torchvision.datasets.MNIST('./MNIST_data', train=False, download=True, transform=transform, shuffle=True)
-test_loader = torch.utils.data.DataLoader(mnist_test, batch_size=batch_size)
+mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=True, transform=transform)
+train_loader = torch.utils.data.DataLoader(mnist_train, batch_size=batch_size, shuffle=True)
+mnist_test = torchvision.datasets.MNIST('./MNIST_data', train=False, download=True, transform=transform)
+test_loader = torch.utils.data.DataLoader(mnist_test, batch_size=batch_size, shuffle=True)
 
 class Flatten(nn.Module):
     def forward(self, input):
@@ -369,6 +369,6 @@ generator.weight_init(mean=0.0, std=0.02)
 discriminator = DiscrimanatorOrig()
 discriminator.weight_init(mean=0.0, std=0.02)
 image_loader = train_loader
-epochs = 50
+epochs = 25
 num_train_batches = -1
 train_gan(generator, discriminator, image_loader, epochs, num_train_batches=num_train_batches)
