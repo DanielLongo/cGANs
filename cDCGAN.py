@@ -53,6 +53,32 @@ def generate_nosie(batch_size, dim=100):
     noise = torch.rand(batch_size, dim, 1, 1)
     return noise
 
+class DiscrimanatorOrig(nn.Module):
+    def __init__(self):
+        super(DiscrimanatorOrig, self).__init__()
+        self.layer1_input = nn.Sequential(
+            nn.Conv2d(1, 64, [4,4], stride=[2,2]),
+            nn.LeakyReLU(negative_slope=.2)
+        )
+        self.layer1_labels = nn.Sequential(
+            nn.Conv2d(10, 64, [4,4], stride=[2,2]),
+            nn.LeakyReLU(negative_slope=.2)
+        ) 
+
+        self.layer2 = nn.Sequential(
+            nn.Conv2d(128, 256, [4,4], stride=[2,2])
+            nn.BatchNorm2d(256)
+            nn.LeakyReLU(negative_slope=.2)
+        )
+        self.layer3 = nn.Sequential(
+            nn.Conv2d(256, 512, [4,4], stride=[2,2])
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(negative_slope=.2)
+        )
+        # self.layer4 = nn.Sequential (
+            # nn.Conv2d(512, 1, ))
+    def forward(self, input, labels):
+        
 class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
@@ -213,12 +239,12 @@ def save_images(generator, images, epoch, i):
     gs = gridspec.GridSpec(3, 3)
 
 def save_images(generator, epoch, i):
-    fig = plt.figure(figsize=(10, 10))
-    gs = gridspec.GridSpec(10, 10)
+    fig = plt.figure(figsize=(4, 3))
+    gs = gridspec.GridSpec(4, 3)
     gs.update(wspace=.05, hspace=.05)
-    z = generate_nosie(100)
+    z = generate_nosie(10)
     onehot = torch.zeros(10, 10).scatter_(1, torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
-    fill = torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9] * 10)
+    fill = torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9])
     fill = onehot[fill]
 
     images_fake = generator(z, fill)
