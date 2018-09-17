@@ -66,18 +66,36 @@ class DiscrimanatorOrig(nn.Module):
         ) 
 
         self.layer2 = nn.Sequential(
-            nn.Conv2d(128, 256, [4,4], stride=[2,2])
-            nn.BatchNorm2d(256)
+            nn.Conv2d(128, 256, [4,4], stride=[2,2]),
+            nn.BatchNorm2d(256),
             nn.LeakyReLU(negative_slope=.2)
         )
         self.layer3 = nn.Sequential(
-            nn.Conv2d(256, 512, [4,4], stride=[2,2])
+            nn.Conv2d(256, 512, [2,2], stride=[2,2]),
             nn.BatchNorm2d(512),
             nn.LeakyReLU(negative_slope=.2)
         )
-        # self.layer4 = nn.Sequential (
-            # nn.Conv2d(512, 1, ))
+        self.layer4 = nn.Sequential (
+            nn.Conv2d(512, 1, [1,1], stride=[2,2]),
+            nn.Sigmoid())
+
     def forward(self, input, labels):
+        x = self.layer1_input(input)
+        y = self.layer1_labels(labels)
+        out = torch.cat([x,y], 1)
+        # print("out1", out.shape)
+        out = self.layer2(out)
+        # print("out2", out.shape)
+        out = self.layer3(out)
+        # print("out3", out.shape)
+        out = self.layer4(out)
+        # print("out4", out.shape)
+        return out
+
+    def weight_init(m, mean, std):
+        if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
+            m.weight.data.normal_(mean, std)
+            m.bias.data.zero_()
         
 class Discriminator(nn.Module):
     def __init__(self):
@@ -336,7 +354,8 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
 
 generator = Generator()
 generator.weight_init(mean=0.0, std=0.02)
-discriminator = Discriminator()
+# discriminator = Discriminator()
+discriminator = DiscrimanatorOrig()
 discriminator.weight_init(mean=0.0, std=0.02)
 image_loader = train_loader
 epochs = 50
