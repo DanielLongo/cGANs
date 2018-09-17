@@ -27,9 +27,9 @@ transform = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
     ])
-mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=True, transform=transform)
+mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=True, transform=transform, shuffle=True)
 train_loader = torch.utils.data.DataLoader(mnist_train, batch_size=batch_size)
-mnist_test = torchvision.datasets.MNIST('./MNIST_data', train=False, download=True, transform=transform)
+mnist_test = torchvision.datasets.MNIST('./MNIST_data', train=False, download=True, transform=transform, shuffle=True)
 test_loader = torch.utils.data.DataLoader(mnist_test, batch_size=batch_size)
 
 class Flatten(nn.Module):
@@ -333,7 +333,7 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
             d_loss = d_real_loss + d_fake_loss
             d_loss.backward(retain_graph=True)
             discriminator_optimizer.step()
-            
+
             # train generator sepretly
             generator_optimizer.zero_grad()
             z = generate_nosie(batch_size)
