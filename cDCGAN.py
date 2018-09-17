@@ -198,14 +198,14 @@ class Generator(nn.Module):
             nn.BatchNorm2d(256),
             nn.ReLU())
         self.layer2 = nn.Sequential(
-            nn.ConvTranspose2d(512, 256, [4,4], stride=[2,2]),
+            nn.ConvTranspose2d(512, 256, [4,4], stride=[2,2], padding=1),
             nn.BatchNorm2d(256),
             nn.ReLU())
         self.layer3 = nn.Sequential(
-            nn.ConvTranspose2d(256, 128, [2,2], stride=[2,2], padding=2),
+            nn.ConvTranspose2d(256, 128, [4,4], stride=[2,2], padding=1),
             nn.BatchNorm2d(128))
         self.layer4 = nn.Sequential(
-            nn.ConvTranspose2d(128, 1, [2,2], stride=[2,2]),
+            nn.ConvTranspose2d(128, 1, [4,4], stride=[2,2], padding=1),
             nn.Tanh())
 
     def forward(self, input, labels):
@@ -345,7 +345,8 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
             # print("d real loss", d_real_loss)
             # print("d fake loss", d_fake_loss)
             d_loss = d_real_loss + d_fake_loss
-            d_loss.backward(retain_graph=True)
+            # d_loss.backward(retain_graph=True)
+            d_loss.backward()
             discriminator_optimizer.step()
 
             # train generator sepretly
@@ -358,14 +359,14 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
             d_result = discriminator(images_fake, y_fill).squeeze()
             g_loss = BCE_loss(d_result, torch.ones(batch_size))
             g_loss.backward(retain_graph=True)
+            g_loss.backward()
             generator_optimizer.step()
 
-            if iters % 1000  == 0:
-                print("Iteration:", iters)
-                print("Epoch:", epoch)
-                print("Discriminator Cost", d_loss.cpu().detach().numpy())
-                print("Generator Cost", g_loss.cpu().detach().numpy())
-                save_images(generator, epoch, iters)
+        print("Iteration:", iters)
+        print("Epoch:", epoch)
+        print("Discriminator Cost", d_loss.cpu().detach().numpy())
+        print("Generator Cost", g_loss.cpu().detach().numpy())
+        save_images(generator, epoch, iters)
             iters += 1                
 
     return generator, discriminator
