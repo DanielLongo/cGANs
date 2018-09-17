@@ -83,13 +83,9 @@ class DiscrimanatorOrig(nn.Module):
         x = self.layer1_input(input)
         y = self.layer1_labels(labels)
         out = torch.cat([x,y], 1)
-        # print("out1", out.shape)
         out = self.layer2(out)
-        # print("out2", out.shape)
         out = self.layer3(out)
-        # print("out3", out.shape)
         out = self.layer4(out)
-        # print("out4", out.shape)
         return out
 
     def weight_init(m, mean, std):
@@ -251,6 +247,10 @@ def show_image(images):
     images_np = images.detach().numpy().squeeze()
     plt.imshow(images_np[0])
     plt.show()
+
+# def save_images(generator, images, epoch, i):
+#     fig = plt.figure(figsize=(3, 3))
+#     gs = gridspec.GridSpec(3, 3)
 
 def save_images(generator, epoch, i):
     fig = plt.figure(figsize=(10, 10))
