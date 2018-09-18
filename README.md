@@ -4,3 +4,5 @@ For information on cGANs view https://arxiv.org/abs/1802.05637 and https://arxiv
 TODO:
 optimize/stabilize architecture
 
+Sample image output 
+<img src="cGANs/generated_images/test-29-14040.png"/>
