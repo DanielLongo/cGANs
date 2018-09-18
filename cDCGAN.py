@@ -377,6 +377,6 @@ generator.weight_init(mean=0.0, std=0.02)
 discriminator = DiscrimanatorOrig()
 discriminator.weight_init(mean=0.0, std=0.02)
 image_loader = train_loader
-epochs = 25
+epochs = 50
 num_train_batches = -1
 train_gan(generator, discriminator, image_loader, epochs, num_train_batches=num_train_batches)
