@@ -5,4 +5,4 @@ TODO:
 optimize/stabilize architecture
 
 Sample image output 
-<img src="cGANs/generated_images/test-29-14040.png"/>
+<img src="DanielLongo/cGANs/generated_images/test-29-14040.png"/>
