@@ -53,7 +53,7 @@ class Unflatten(nn.Module):
     
 def generate_nosie(batch_size, dim=100):
     # noise = torch.rand(batch_size, dim) * 2 - 1
-    noise = torch.rand(batch_size, dim, 1, 1)
+    noise = torch.randn(batch_size, dim, 1, 1)
     return noise
 
 class DiscrimanatorOrig(nn.Module):
