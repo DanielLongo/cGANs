@@ -5,5 +5,5 @@ TODO:
 optimize/stabilize architecture
 
 Sample image output 
-<img src="https://github.com/DanielLongo/cGANs/generated_images/test-29-14040.png"/>
+<img src="https://github.com/DanielLongo/cGANs/blob/master/generated_images/test-43-20592.png"/>
 @epoch 40
