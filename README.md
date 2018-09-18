@@ -9,4 +9,4 @@ Epochs 0-20
 ### Sample image output
 With mnist
 @epoch 50 <br />
-<img height=100 width=100 src="https://github.com/DanielLongo/cGANs/blob/master/generated_images/test-49-23400.png"/>
+<img height=320 width=320 src="https://github.com/DanielLongo/cGANs/blob/master/generated_images/test-49-23400.png"/>
