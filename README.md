@@ -8,5 +8,5 @@ Epochs 0-20
 <img src="https://github.com/DanielLongo/cGANs/blob/master/generated_images/0-20.gif"/>
 ### Sample image output
 With mnist
-@epoch 19 <br />
-<img src="https://github.com/DanielLongo/cGANs/blob/master/generated_images/test-19-9360.png"/>
+@epoch 50 <br />
+<img height=100 width=100 src="https://github.com/DanielLongo/cGANs/blob/master/generated_images/test-49-23400.png"/>
