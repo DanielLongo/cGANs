@@ -5,7 +5,7 @@
 * other cDDGANS implemenatations https://github.com/znxlwm/pytorch-MNIST-CelebA-cGAN-cDCGAN and https://github.com/togheppi/cDCGAN 
 ### Training 
 <p>Epochs 0-20</p>
-<p margin-left=100> @Epoch 50</p> <br/>
+<p margin-left=100>@Epoch 50</p>
 <img src="https://github.com/DanielLongo/cGANs/blob/master/generated_images/0-20.gif"/>
 <img height=320 width=320 src="https://github.com/DanielLongo/cGANs/blob/master/generated_images/test-49-23400.png"/>
 ### Sample image output
