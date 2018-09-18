@@ -6,7 +6,7 @@
 ### Training 
 Epochs 0-20 <br/>
 <img src="https://github.com/DanielLongo/cGANs/blob/master/generated_images/0-20.gif"/>
+<img height=320 width=320 src="https://github.com/DanielLongo/cGANs/blob/master/generated_images/test-49-23400.png"/>
 ### Sample image output
 With mnist
 @epoch 50 <br/>
-<img height=320 width=320 src="https://github.com/DanielLongo/cGANs/blob/master/generated_images/test-49-23400.png"/>
