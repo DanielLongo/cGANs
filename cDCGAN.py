@@ -12,18 +12,18 @@ import matplotlib.gridspec as gridspec
 batch_size = 128
 img_size = 32
 plt.rcParams['image.cmap'] = 'gray'
-#use_cuda = False
-use_cuda = True
-try:
+
+if torch.cuda.is_available():
+    print("Running On GPU :)")
     torch.set_default_tensor_type("torch.cuda.FloatTensor")
     torch.backends.cudnn.benchmark = True
-except TypeError:
+    dtype = torch.cuda.FloatTensor
+    use_cuda = True
+else:
+    print("Running On CPU :(")
     use_cuda = False
-# if use_cuda:
-    # torch.set_default_tensor_type('torch.cuda.FloatTensor')
-    # torch.backends.cudnn.benchmark = True
+    dtype = torch.FloatTensor
 
-# transform = torchvision.transforms.ToTensor()
 transform = transforms.Compose([
     transforms.Resize(img_size),
     transforms.ToTensor(),
@@ -265,8 +265,8 @@ def save_images(generator, epoch, i):
     gs = gridspec.GridSpec(10, 10)
     gs.update(wspace=.05, hspace=.05)
     z = generate_nosie(100)
-    onehot = torch.zeros(10, 10).scatter_(1, torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
-    fill = torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9] * 10)
+    onehot = torch.zeros(10, 10).scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).type(dtype).view(10,1), 1).view(10, 10, 1, 1)
+    fill = torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9] * 10).type(dtype)
     fill = onehot[fill]
 
     images_fake = generator(z, fill)
@@ -295,10 +295,7 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
     BCE_loss = nn.BCELoss()
     iters = 0
     onehot = torch.zeros(10, 10)
-    if use_cuda:
-        onehot = onehot.scatter_(1, torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
-    else:
-        onehot = onehot.scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
+    onehot = onehot.scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).type(dtype).view(10, 10, 1, 1)
     fill = torch.zeros([10, 10, 32, 32])
     for i in range(10):
         fill[i, i, :, :] = 1
@@ -315,8 +312,7 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
         #     generator_optimizer.param_groups[0]["lr"] /= 2
         #     discriminator_optimizer.param_groups[0]["lr"] /= 2
         for i, (examples, labels) in enumerate(image_loader):
-            if use_cuda:
-                examples = examples.cuda()
+            examples = examples.type(dtype)
             if i == num_train_batches:
                 break
             if examples.shape[0] != batch_size:
@@ -333,7 +329,10 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
 
             z = generate_nosie(batch_size)
             # print("batch_size", batch_size)
-            y_rand = (torch.rand(batch_size, 1) * 10).type(torch.cuda.LongTensor).squeeze()
+            if use_cuda:
+                y_rand = (torch.rand(batch_size, 1) * 10).type(torch.cuda.LongTensor).squeeze()            
+            else:
+                y_rand = (torch.rand(batch_size, 1) * 10).type(torch.LongTensor).squeeze()
             # print("y_rand", y_rand.shape)
             y_label = onehot[y_rand]
             y_fill = fill[y_rand]
@@ -352,7 +351,10 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
             # train generator sepretly
             generator_optimizer.zero_grad()
             z = generate_nosie(batch_size)
-            y_rand = (torch.rand(batch_size, 1) * 10).type(torch.cuda.LongTensor).squeeze()
+            if use_cuda:
+                y_rand = (torch.rand(batch_size, 1) * 10).type(torch.cuda.LongTensor).squeeze()            
+            else:
+                y_rand = (torch.rand(batch_size, 1) * 10).type(torch.LongTensor).squeeze()
             y_label = onehot[y_rand]
             y_fill = fill[y_rand]
             images_fake = generator(z, y_label)
