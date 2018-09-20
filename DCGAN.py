@@ -63,31 +63,20 @@ class Discriminator(nn.Module):
             nn.LeakyReLU(negative_slope=.01),
             nn.MaxPool2d([2,2], stride=[2,2]))
         self.fc1 = nn.Sequential(
-            nn.Linear((64*6*6), (64*6*6))
+            nn.Linear((64*5*5), (64*5*5)),
             nn.LeakyReLU(negative_slope=.01))
-        self.fc2 = nn.Linear((65*6*6), 1)
+        self.fc2 = nn.Sequential(
+            nn.Linear((64*5*5), 1),
+            nn.Sigmoid())
 
-    def forward(x):
+
+    def forward(self, x):
         out = self.conv1(x)
         out = self.conv2(out)
         out = out.view(out.shape[0], -1)
         out = self.fc1(out)
         out = self.fc2(out)
         return out
-
-        nn.Linear(noise_dim, 1024),
-        nn.ReLU(),
-        nn.BatchNorm1d(1024),
-        nn.Linear(1024, (7*7*128)),
-        nn.ReLU(),
-        nn.BatchNorm1d(7*7*128),
-        Unflatten(),
-        nn.ConvTranspose2d(128, 64, [4,4], stride=[2,2], padding=1),
-        nn.ReLU(),
-        nn.BatchNorm2d(64),
-        nn.ConvTranspose2d(64, 1, [4,4], stride=[2,2], padding=1),
-        nn.Tanh(),
-        Flatten()
 
 class Generator(nn.Module):
     def __init__(self):
@@ -107,7 +96,7 @@ class Generator(nn.Module):
             nn.ConvTranspose2d(128, 1, [4,4], stride=[2,2], padding=1),
             nn.Tanh())
 
-    def forward(self, input, labels):
+    def forward(self, x):
         out = self.deconv1(x)
         out = self.deconv2(out)
         out = self.deconv3(out)
@@ -151,33 +140,36 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, lr
     iters = 0
     d_optimizer = create_optimizer(discriminator, lr=lr, betas=(.5, .999))
     g_optimizer = create_optimizer(generator, lr=lr, betas=(.5, .999))
-
+    BCELoss = nn.BCELoss()
     for epoch in range(num_epochs):
-        for x, _ in loader_train:
+        for x, _ in image_loader:
             if x.shape[0] != batch_size:
                 continue
-            D_solver.zero_grad()
             real_data = x.type(dtype)
-            logits_real = D(2* (real_data - 0.5)).type(dtype)
 
             z = generate_nosie(batch_size)
             fake_images = generator(z)
-            g_result = discriminator(fake_images)
-            g_cost = nn.BCELoss(fake_images, torch.ones(batch_size))
+            g_result = discriminator(fake_images).squeeze()
+            g_cost = BCELoss(g_result, torch.ones(batch_size))
             g_cost.backward()
             g_optimizer.step()
             g_optimizer.zero_grad()
 
+            d_optimizer.zero_grad()
             z = generate_nosie(batch_size)
             fake_images = generator(z)
-            d_spred_fake = discriminator(fake_images)
-            d_cost_fake = nn.BCELoss(fake_images, torch.zeros(batch_size))
-            d_spred_real = generator_loss(x)
-            d_cost_real = nn.BCELoss(d_spred_real, torch.ones(batch_size))
+            d_spred_fake = discriminator(fake_images).squeeze()
+            d_cost_fake = BCELoss(d_spred_fake, torch.zeros(batch_size))
+            d_spred_real = discriminator(x).squeeze()
+            d_cost_real = BCELoss(d_spred_real, torch.ones(batch_size))
             d_cost = d_cost_real + d_cost_fake
             d_cost.backward()
             d_optimizer.step()
+            save_images(generator, epoch, iters)
             iters += 1
-        save_images(discriminator)
     return discriminator, generator
+
+d = Discriminator()
+g = Generator()
+train_gan(d, g, train_loader, 10, 128, .0002)
 
