@@ -12,6 +12,8 @@ import matplotlib.gridspec as gridspec
 batch_size = 128
 img_size = 32
 plt.rcParams['image.cmap'] = 'gray'
+discriminator_filename = "test_d"
+generator_filename = "test_g"
 
 if torch.cuda.is_available():
     print("Running On GPU :)")
@@ -21,6 +23,7 @@ if torch.cuda.is_available():
     use_cuda = True
 else:
     print("Running On CPU :(")
+    print("This may take a while")
     use_cuda = False
     dtype = torch.FloatTensor
 
@@ -34,25 +37,8 @@ mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=Tr
 train_loader = torch.utils.data.DataLoader(mnist_train, batch_size=batch_size, shuffle=True)
 mnist_test = torchvision.datasets.MNIST('./MNIST_data', train=False, download=True, transform=transform)
 test_loader = torch.utils.data.DataLoader(mnist_test, batch_size=batch_size,  shuffle=True)
-
-class Flatten(nn.Module):
-    def forward(self, input):
-        flattened = input.view(input.shape[0], -1)
-        return flattened
-    
-class Unflatten(nn.Module):
-    def __init__(self, C=128, H=7, W=7):
-        super(Unflatten, self).__init__()
-        self.C = C
-        self.H = H
-        self.W = W
-        
-    def forward(self, input):
-        unflattened = input.view(-1, self.C, self.H, self.W)
-        return unflattened
     
 def generate_nosie(batch_size, dim=100):
-    # noise = torch.rand(batch_size, dim) * 2 - 1
     noise = torch.randn(batch_size, dim, 1, 1)
     return noise
 
@@ -86,14 +72,9 @@ class DiscrimanatorOrig(nn.Module):
         x = self.layer1_input(input)
         y = self.layer1_labels(labels)
         out = torch.cat([x,y], 1)
-#        print("Discrimnator")
- #       print("out1", out.shape)
         out = self.layer2(out)
-  #      print("out2", out.shape)
         out = self.layer3(out)
-   #     print("out3", out.shape)
         out = self.layer4(out)
-    #    print("out4", out.shape)
         return out
 
     def weight_init(m, mean, std):
@@ -105,29 +86,22 @@ class Discriminator(nn.Module):
         super(Discriminator, self).__init__()
         self.layer1_input = nn.Sequential(
             nn.Conv2d(1, 64, [4,4], stride=[2,2]),
-            nn.LeakyReLU(negative_slope=.2)#,
-            # nn.MaxPool2d([2,2], stride=[2,2])
+            nn.LeakyReLU(negative_slope=.2)
         )
         self.layer1_labels = nn.Sequential(
             nn.Conv2d(10, 64, [4,4], stride=[2,2]),
-            nn.LeakyReLU(negative_slope=.2)#,
-            # nn.MaxPool2d([2,2], stride=[2,2])
+            nn.LeakyReLU(negative_slope=.2)
         )
 
         self.layer2 = nn.Sequential(
             nn.Conv2d(128, 256, [4,4], stride=[2,2]),
             nn.BatchNorm2d(256),
             nn.LeakyReLU(negative_slope=.2)
-            # nn.MaxPool2d([2,2], stride=[2,2])
         )
         self.layer3 = nn.Sequential(
             nn.Conv2d(256, 512, [4,4], stride=[1,1]),
             nn.BatchNorm2d(512),
             nn.LeakyReLU(negative_slope=.2))
-
-        # self.layer4 = nn.Sequential(
-        #     nn.Conv2d(256, 1, [2,2], stride=[2,2]),
-        #     torch.nn.Sigmoid())
 
         self.layer4 = nn.Sequential(
             nn.Conv2d(512, 256, [2,2], stride=[2,2]),
@@ -145,47 +119,26 @@ class Discriminator(nn.Module):
             nn.Linear(64, 1),
             nn.Sigmoid())
 
-    # def normal_init(m, mean, std):
     def weight_init(m, mean, std):
         if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
             m.weight.data.normal_(mean, std)
             m.bias.data.zero_()
 
     def forward(self, input, labels):
-        # print("input", input.shape)
-        # print("labels", labels.shape)
         batch_size = input.shape[0]
         x = self.layer1_input(input)
         y = self.layer1_labels(labels)
-        # print("x", x.shape)
-        # print("y", y.shape)
         out = torch.cat([x, y], 1)
-        # print("out1", out.shape)
         out = self.layer2(out)
-        # print("out2", out.shape)
         out = self.layer3(out)
-        # print("out3", out.shape)
         out = self.layer4(out)
-        # print("out4", out.shape)
         out = out.view(batch_size, -1)
-        # print("flattened", out.shape)
         out = self.fc1(out)
-        # print("fc1", out.shape)
         out = self.fc2(out)
-        # print("fc2", out.shape)
         out = self.fc3(out)
         return out
 
-# class Generator(nn.Module):
-#     def __init__(self, noise_dim=96):
-#         super(Generator, self).__init__()
-#         self.noise_dim = noise_dim
-#         self.layer1_input = nn.ConvTranspose2d(96, 256, )
-#     def forward(self, input, labels):
-#         x = 
-
-
-class Generator(nn.Module):
+class ConditionalGenerator(nn.Module):
     # initializers
     def __init__(self):
         super(Generator, self).__init__()
@@ -209,23 +162,14 @@ class Generator(nn.Module):
             nn.Tanh())
 
     def forward(self, input, labels):
-#        print("generator")
-        # print("input", input.shape)
-        # print("label", labels.shape)
         x = self.layer1_input(input)
         y = self.layer1_labels(labels)
-        # print("x", x.shape)
-        # print("y", y.shape)
         out = torch.cat([x, y], 1)
-     #   print("out1", out.shape)
         out = self.layer2(out)
-      #  print("out2", out.shape)
         out = self.layer3(out)
-       # print("out3", out.shape)
         out = self.layer4(out)
-        #print("out4", out.shape)
         return out
-    # def normal_init(m, mean, std):
+
     def weight_init(m, mean, std):
         if isinstance(m, nn.ConvTranspose2d) or isinstance(m, nn.Conv2d):
             m.weight.data.normal_(mean, std)
@@ -250,23 +194,17 @@ def generator_loss(scores_fake):
     loss = torch.mean((scores_fake - true_labels) ** 2) * .5
     return loss
 
-def show_image(images):
-#     for image in images:
-    images_np = images.detach().numpy().squeeze()
-    plt.imshow(images_np[0])
-    plt.show()
-
-# def save_images(generator, images, epoch, i):
-#     fig = plt.figure(figsize=(3, 3))
-#     gs = gridspec.GridSpec(3, 3)
-
 def save_images(generator, epoch, i):
     fig = plt.figure(figsize=(10, 10))
     gs = gridspec.GridSpec(10, 10)
     gs.update(wspace=.05, hspace=.05)
     z = generate_nosie(100)
-    onehot = torch.zeros(10, 10).scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).type(dtype).view(10,1), 1).view(10, 10, 1, 1)
-    fill = torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9] * 10).type(dtype)
+    if use_cuda:
+        onehot = torch.zeros(10, 10).scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).cuda().view(10,1), 1).view(10, 10, 1, 1)
+        fill = torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9] * 10).cuda()
+    else:
+        onehot = torch.zeros(10, 10).scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).view(10, 10, 1, 1)
+        fill = torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9] * 10)
     fill = onehot[fill]
 
     images_fake = generator(z, fill)
@@ -280,16 +218,11 @@ def save_images(generator, epoch, i):
         plt.imshow(sample.reshape(32, 32), cmap='Greys_r')
 
     filename = "test-" + str(epoch) + "-" + str(i) 
-    # print("file logged")
     plt.savefig("./generated_images/" + filename, bbox_inches="tight" )
     plt.close(fig)
 
     
 def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=-1, lr=0.0002):
-    #generator_lr = .0002
-    #discriminator_lr = .0001
-    #generator_optimizer = create_optimizer(generator, lr=generator_lr, betas=(.5, .999))
-    #discriminator_optimizer = create_optimizer(discriminator, lr=discriminator_lr, betas=(.5, .999))
     generator_optimizer = create_optimizer(generator, lr=lr, betas=(.5, .999))
     discriminator_optimizer = create_optimizer(discriminator, lr=lr, betas=(.5, .999))
     BCE_loss = nn.BCELoss()
@@ -300,17 +233,10 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
     for i in range(10):
         fill[i, i, :, :] = 1
     for epoch in range(epochs):
-        if (epoch+1) == 11:
-            #IS ONLY [0] VALID
+        if ((epoch+1) == 11) or ((epoch+1) == 16):
             generator_optimizer.param_groups[0]["lr"] /= 10 
             discriminator_optimizer.param_groups[0]["lr"] /= 10
 
-        if (epoch+1) == 16:
-            generator_optimizer.param_groups[0]["lr"] /= 10
-            discriminator_optimizer.param_groups[0]["lr"] /= 10
-        # if (epoch == 5) or (epoch == 10):
-        #     generator_optimizer.param_groups[0]["lr"] /= 2
-        #     discriminator_optimizer.param_groups[0]["lr"] /= 2
         for i, (examples, labels) in enumerate(image_loader):
             examples = examples.type(dtype)
             if i == num_train_batches:
@@ -321,34 +247,26 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
             discriminator_optimizer.zero_grad()
 
             y_fill = fill[labels]
-            # # print("y fill", y_fill.shape)
-            # print("examples", examples.shape)
             d_logits = discriminator(examples, y_fill).squeeze()
-            # print("d_logits", d_logits.shape)
             d_real_loss = BCE_loss(d_logits, torch.ones(batch_size))
-
             z = generate_nosie(batch_size)
-            # print("batch_size", batch_size)
+
             if use_cuda:
                 y_rand = (torch.rand(batch_size, 1) * 10).type(torch.cuda.LongTensor).squeeze()            
             else:
                 y_rand = (torch.rand(batch_size, 1) * 10).type(torch.LongTensor).squeeze()
-            # print("y_rand", y_rand.shape)
+
             y_label = onehot[y_rand]
             y_fill = fill[y_rand]
-            # print("y_label", y_label.shape)
             images_fake = generator(z, y_label)
             d_result = discriminator(images_fake, y_fill).squeeze()
             d_fake_loss = BCE_loss(d_result, torch.zeros(batch_size))
             d_fake_loss_avg = d_result.data.mean()
-            # print("d real loss", d_real_loss)
-            # print("d fake loss", d_fake_loss)
             d_loss = d_real_loss + d_fake_loss
-            # d_loss.backward(retain_graph=True)
             d_loss.backward()
             discriminator_optimizer.step()
 
-            # train generator sepretly
+            # train generator seperatly
             generator_optimizer.zero_grad()
             z = generate_nosie(batch_size)
             if use_cuda:
@@ -373,12 +291,18 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
 
     return generator, discriminator
 
-generator = Generator()
-generator.weight_init(mean=0.0, std=0.02)
-# discriminator = Discriminator()
-discriminator = DiscrimanatorOrig()
-discriminator.weight_init(mean=0.0, std=0.02)
-image_loader = train_loader
-epochs = 50
-num_train_batches = -1
-train_gan(generator, discriminator, image_loader, epochs, num_train_batches=num_train_batches)
+if __name__ == "__main__": 
+    generator = ConditionalGenerator()
+    generator.weight_init(mean=0.0, std=0.02)
+    discriminator = DiscrimanatorOrig()
+    discriminator.weight_init(mean=0.0, std=0.02)
+    image_loader = train_loader
+    epochs = 2
+    num_train_batches = 1
+    generator, discriminator = train_gan(generator, discriminator, image_loader, epochs, num_train_batches=num_train_batches)
+    print("Training finished")
+    # torch.save(generator, generator_filename + ".pt")
+    # torch.save(discriminator, discriminator_filename + ".pt")
+    torch.save(generator.state_dict(), generator_filename + ".pt")
+    torch.save(discriminator.state_dict(), discriminator_filename + ".pt")
+    print("Models Saved")
