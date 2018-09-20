@@ -138,7 +138,7 @@ class Discriminator(nn.Module):
 class ConditionalGenerator(nn.Module):
     # initializers
     def __init__(self):
-        super(Generator, self).__init__()
+        super(ConditionalGenerator, self).__init__()
         self.layer1_input = nn.Sequential(
             nn.ConvTranspose2d(100, 256, [4,4], stride=[1,1]),
             nn.BatchNorm2d(256),

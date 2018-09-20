@@ -97,7 +97,7 @@ class Generator(nn.Module):
             nn.Tanh())
 
     def forward(self, x):
-        out = self.deconv1(x)
+        out = self.deconv1(x)D
         out = self.deconv2(out)
         out = self.deconv3(out)
         out = self.deconv4(out)
@@ -168,8 +168,8 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, lr
             save_images(generator, epoch, iters)
             iters += 1
     return discriminator, generator
-
-d = Discriminator()
-g = Generator()
-train_gan(d, g, train_loader, 10, 128, .0002)
+if __name__ == "__main__": 
+    d = Discriminator()
+    g = Generator()
+    train_gan(d, g, train_loader, 10, 128, .0002)
 

@@ -1,9 +1,11 @@
 import torch
+from DCGAN import Discriminator
+from DCGAN import Generator
+
 from cDCGAN import ConditionalGenerator
 pretrained_generator_filepath = "test_g.pt"
-pretrained_generator = Generator()
+pretrained_generator = ConditionalGenerator()
 pretrained_generator.load_state_dict(torch.load(pretrained_generator_filepath))
-# pretrained_generator = torch.load(pretrained_generator_filepath)
 print("type", pretrained_generator.type)
 # print(pretrained_generator)
 print("layer2", pretrained_generator.layer2)
