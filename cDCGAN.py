@@ -2,12 +2,9 @@ import torch
 from torch import nn
 import torchvision.datasets
 from torchvision import transforms
-import numpy as np
-import numpy as np
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
-# import torch.nn.functional as F
 import matplotlib.gridspec as gridspec
 batch_size = 128
 img_size = 32
