@@ -97,7 +97,7 @@ class Generator(nn.Module):
             nn.Tanh())
 
     def forward(self, x):
-        out = self.deconv1(x)D
+        out = self.deconv1(x)
         out = self.deconv2(out)
         out = self.deconv3(out)
         out = self.deconv4(out)
@@ -116,7 +116,7 @@ def create_optimizer(model, lr=.01, betas=None):
         optimizer = torch.optim.Adam(model.parameters(), lr=lr, betas=betas)
     return optimizer
 
-def save_images(generator, epoch, i):
+def save_images(generator, epoch, i, filename_prefix):
     fig = plt.figure(figsize=(10, 10))
     gs = gridspec.GridSpec(10, 10)
     gs.update(wspace=.05, hspace=.05)
@@ -131,12 +131,12 @@ def save_images(generator, epoch, i):
         ax.set_aspect('equal')
         plt.imshow(sample.reshape(32, 32), cmap='Greys_r')
 
-    filename = "DCGAN-" + str(epoch) + "-" + str(i) 
+    filename = filename_prefix + str(epoch) + "-" + str(i) 
     plt.savefig("./generated_images/" + filename, bbox_inches="tight" )
     plt.close(fig)
 
 
-def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, lr):
+def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, lr, dtype, filename_prefix="DCGAN-"):
     iters = 0
     d_optimizer = create_optimizer(discriminator, lr=lr, betas=(.5, .999))
     g_optimizer = create_optimizer(generator, lr=lr, betas=(.5, .999))
@@ -165,9 +165,13 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, lr
             d_cost = d_cost_real + d_cost_fake
             d_cost.backward()
             d_optimizer.step()
-            save_images(generator, epoch, iters)
+            save_images(generator, epoch, iters, filename_prefix)
+            print("Epoch", epoch, "Iter", iters)
+            print("d_cost", d_cost)
+            print("g_cost", g_cost)
             iters += 1
     return discriminator, generator
+
 if __name__ == "__main__": 
     d = Discriminator()
     g = Generator()
