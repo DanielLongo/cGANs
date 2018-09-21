@@ -6,34 +6,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
-batch_size = 128
-img_size = 32
 plt.rcParams['image.cmap'] = 'gray'
-discriminator_filename = "test_d"
-generator_filename = "test_g"
-
-if torch.cuda.is_available():
-    print("Running On GPU :)")
-    torch.set_default_tensor_type("torch.cuda.FloatTensor")
-    torch.backends.cudnn.benchmark = True
-    dtype = torch.cuda.FloatTensor
-    use_cuda = True
-else:
-    print("Running On CPU :(")
-    print("This may take a while")
-    use_cuda = False
-    dtype = torch.FloatTensor
-
-transform = transforms.Compose([
-    transforms.Resize(img_size),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
-    ])
-
-mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=True, transform=transform)
-train_loader = torch.utils.data.DataLoader(mnist_train, batch_size=batch_size, shuffle=True)
-mnist_test = torchvision.datasets.MNIST('./MNIST_data', train=False, download=True, transform=transform)
-test_loader = torch.utils.data.DataLoader(mnist_test, batch_size=batch_size,  shuffle=True)
     
 def generate_nosie(batch_size, dim=100):
     noise = torch.randn(batch_size, dim, 1, 1)
@@ -165,15 +138,42 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, lr
             d_cost = d_cost_real + d_cost_fake
             d_cost.backward()
             d_optimizer.step()
-            save_images(generator, epoch, iters, filename_prefix)
-            print("Epoch", epoch, "Iter", iters)
-            print("d_cost", d_cost)
-            print("g_cost", g_cost)
             iters += 1
+        save_images(generator, epoch, iters, filename_prefix)
+        print("Epoch", epoch, "Iter", iters)
+        print("d_cost", d_cost)
+        print("g_cost", g_cost)
+
     return discriminator, generator
 
-if __name__ == "__main__": 
+if __name__ == "__main__":
+    discriminator_filename = "test_d"
+    generator_filename = "test_g"
+    batch_size = 128
+    img_size = 32
+    if torch.cuda.is_available():
+        print("Running On GPU :)")
+        torch.set_default_tensor_type("torch.cuda.FloatTensor")
+        torch.backends.cudnn.benchmark = True
+        dtype = torch.cuda.FloatTensor
+        use_cuda = True
+    else:
+        print("Running On CPU :(")
+        print("This may take a while")
+        use_cuda = False
+        dtype = torch.FloatTensor
+
+    transform = transforms.Compose([
+        transforms.Resize(img_size),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
+
+    mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=True, transform=transform)
+    train_loader = torch.utils.data.DataLoader(mnist_train, batch_size=batch_size, shuffle=True)
+    mnist_test = torchvision.datasets.MNIST('./MNIST_data', train=False, download=True, transform=transform)
+    test_loader = torch.utils.data.DataLoader(mnist_test, batch_size=batch_size,  shuffle=True)
+
     d = Discriminator()
     g = Generator()
-    train_gan(d, g, train_loader, 10, 128, .0002)
+    train_gan(d, g, train_loader, 20, 128, .0002, dtype)
 
