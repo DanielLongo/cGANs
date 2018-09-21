@@ -156,9 +156,9 @@ if __name__ == "__main__":
         transforms.ToTensor(),
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
 
-    mnist_train = torchvision.datasets.EMNIST('./EMNIST_data', train=True, download=True, transform=transform)
+    mnist_train = torchvision.datasets.EMNIST('./EMNIST_data', train=True, download=True, transform=transform, split="letters")
     train_loader = torch.utils.data.DataLoader(mnist_train, batch_size=batch_size, shuffle=True)
-    mnist_test = torchvision.datasets.EMNIST('./EMNIST_data', train=False, download=True, transform=transform)
+    mnist_test = torchvision.datasets.EMNIST('./EMNIST_data', train=False, download=True, transform=transform, split="letters")
     test_loader = torch.utils.data.DataLoader(mnist_test, batch_size=batch_size,  shuffle=True)
 
     discriminator = Discriminator()
