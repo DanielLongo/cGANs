@@ -299,8 +299,8 @@ if __name__ == "__main__":
     discriminator = DiscrimanatorOrig()
     discriminator.weight_init(mean=0.0, std=0.02)
     image_loader = train_loader
-    epochs = 2
-    num_train_batches = 1
+    epochs = 20
+    num_train_batches = -1
     generator, discriminator = train_gan(generator, discriminator, image_loader, epochs, num_train_batches=num_train_batches)
     print("Training finished")
     # torch.save(generator, generator_filename + ".pt")
