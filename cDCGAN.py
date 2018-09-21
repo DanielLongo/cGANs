@@ -197,7 +197,11 @@ def train_gan(generator, discriminator, image_loader, epochs, num_train_batches=
     BCE_loss = nn.BCELoss()
     iters = 0
     onehot = torch.zeros(10, 10)
-    onehot = onehot.scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).type(dtype).view(10, 10, 1, 1)
+    if use_cuda:
+        onehot = onehot.scatter_(1, torch.cuda.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).type(dtype).view(10, 10, 1, 1)
+    else:
+        onehot = onehot.scatter_(1, torch.LongTensor([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]).view(10,1), 1).type(dtype).view(10, 10, 1, 1)
+
     fill = torch.zeros([10, 10, 32, 32])
     for i in range(10):
         fill[i, i, :, :] = 1
