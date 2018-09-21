@@ -7,23 +7,11 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 plt.rcParams['image.cmap'] = 'gray'
-    
+
 def generate_nosie(batch_size, dim=100):
     noise = torch.randn(batch_size, dim, 1, 1)
     return noise
 
-    model = nn.Sequential(
-        nn.Conv2d(1, 32, [5,5], stride=[1,1]),
-        nn.LeakyReLU(negative_slope=.01),
-        nn.MaxPool2d([2,2], stride=[2,2]),
-        nn.Conv2d(32, 64, [5,5], stride=[1,1]),
-        nn.LeakyReLU(negative_slope=.01),
-        nn.MaxPool2d([2,2], stride=[2,2]),
-        Flatten(),
-        nn.Linear((4*4*64), (4*4*64)), 
-        nn.LeakyReLU(negative_slope=.01),
-        nn.Linear((4*4*64), 1)
-    )
 class Discriminator(nn.Module):
     def __init__(self):
         super(Discriminator, self).__init__()
@@ -133,7 +121,7 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, lr
             fake_images = generator(z)
             d_spred_fake = discriminator(fake_images).squeeze()
             d_cost_fake = BCELoss(d_spred_fake, torch.zeros(batch_size))
-            d_spred_real = discriminator(x).squeeze()
+            d_spred_real = discriminator(real_data).squeeze()
             d_cost_real = BCELoss(d_spred_real, torch.ones(batch_size))
             d_cost = d_cost_real + d_cost_fake
             d_cost.backward()
@@ -173,7 +161,11 @@ if __name__ == "__main__":
     mnist_test = torchvision.datasets.MNIST('./MNIST_data', train=False, download=True, transform=transform)
     test_loader = torch.utils.data.DataLoader(mnist_test, batch_size=batch_size,  shuffle=True)
 
-    d = Discriminator()
-    g = Generator()
-    train_gan(d, g, train_loader, 20, 128, .0002, dtype)
+    discriminator = Discriminator()
+    generator = Generator()
+    if use_cuda:
+        discriminator.cuda()
+        generator.cuda()
+
+    train_gan(discriminator, generator, train_loader, 20, 128, .0002, dtype)
 
