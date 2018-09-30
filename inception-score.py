@@ -5,8 +5,9 @@ from torch.nn import functional as F
 import torch.utils.data
 import torchvision
 from torchvision import transforms
+from trans_DCGAN import generator
 
-from torchvision.models.inception import inception_v3
+# from torchvision.models.inception import inception_v3
 
 import numpy as np
 from scipy.stats import entropy
@@ -15,15 +16,16 @@ def get_preds(x, model):
 	preds  = F.softmax(model(x)).data.cpu().numpy()
 	return preds
 
-def inception_score(imgs, batch_size, splits=1):
+def inception_score(imgs, model, batch_size, splits=1):
 	if torch.cuda.is_available():
 		print("Running on a GPU :)")
 		dtype = torch.cuda.FloatTensor
 	else:
 		print("Running on a CPU :(")
 		dtype = torch.FloatTensor
-	inception_model = inception_v3(pretrained=True, transform_input=False).type(dtype)
-	inception_model.eval();
+	inception_model = model
+	# inception_model = inception_v3(pretrained=True, transform_input=False).type(dtype)
+	# inception_model.eval();
 
 	img_loader = torch.utils.data.DataLoader(imgs, batch_size=batch_size, shuffle=True)
 

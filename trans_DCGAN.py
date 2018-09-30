@@ -46,4 +46,9 @@ generator.deconv1.requires_grad = False
 d_lr = .0002
 g_lr = d_lr
 # g_lr = d_lr * .01
-train_gan(discriminator, generator, train_loader, 20, batch_size, g_lr, d_lr, dtype, filename_prefix="trans_DCGAN-")
+if __name__ == "__main__":
+    discriminator_filename = "transD_mnist"
+    generator_filename = "transG_mnist"
+    discriminator, generator = train_gan(discriminator, generator, train_loader, 20, batch_size, g_lr, d_lr, dtype, filename_prefix="trans_DCGAN-")
+    torch.save(generator.state_dict(), generator_filename + ".pt")
+    torch.save(discriminator.state_dict(), discriminator_filename + ".pt")
