@@ -99,8 +99,8 @@ def save_images(generator, epoch, i, filename_prefix):
 
 def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_lr, d_lr, dtype, filename_prefix="DCGAN-"):
     iters = 0
-    d_optimizer = create_optimizer(discriminator, d_lr=lr, betas=(.5, .999))
-    g_optimizer = create_optimizer(generator, g_lr=lr, betas=(.5, .999))
+    d_optimizer = create_optimizer(discriminator, lr=d_lr, betas=(.5, .999))
+    g_optimizer = create_optimizer(generator, lr=g_lr, betas=(.5, .999))
     BCELoss = nn.BCELoss()
     for epoch in range(num_epochs):
         for x, _ in image_loader:
