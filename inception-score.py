@@ -12,7 +12,7 @@ import numpy as np
 from scipy.stats import entropy
 
 def get_preds(x, model):
-	preds  = F.softmax(inception_model(x)).data.cpu().numpy()
+	preds  = F.softmax(model(x)).data.cpu().numpy()
 	return preds
 
 def inception_score(imgs, batch_size, splits=1):
@@ -31,8 +31,10 @@ def inception_score(imgs, batch_size, splits=1):
 	N = len(imgs)
 
 	preds = np.zeros((N, 1000))
-	for i, examples in enumerate(img_loader):
+	for i, (examples,_) in enumerate(img_loader):
+		print(np.shape(examples))
 		examples = examples.type(dtype)
+		print("HEREREERR")
 		if examples.shape[0] != batch_size:
 			continue
 		preds[i*batch_size:(i*batch_size) + batch_size] = get_preds(examples, inception_model)
