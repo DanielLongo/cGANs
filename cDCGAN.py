@@ -187,7 +187,7 @@ def save_images(generator, epoch, i):
         plt.imshow(sample.reshape(32, 32), cmap='Greys_r')
 
     filename = "test-" + str(epoch) + "-" + str(i) 
-    plt.savefig("./generated_images_EMNIST/" + filename, bbox_inches="tight" )
+    plt.savefig("./generated_images/" + filename, bbox_inches="tight" )
     plt.close(fig)
 
     
