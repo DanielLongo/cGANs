@@ -167,7 +167,7 @@ if __name__ == "__main__":
         discriminator.cuda()
         generator.cuda()
 
-    discriminator, generator = train_gan(discriminator, generator, train_loader, 20, 128, .0002, .0002, dtype)
+    discriminator, generator = train_gan(discriminator, generator, train_loader, 10, 128, .0002, .0002, dtype)
     torch.save(generator.state_dict(), generator_filename + ".pt")
     torch.save(discriminator.state_dict(), discriminator_filename + ".pt")
     print("Models Saved")
