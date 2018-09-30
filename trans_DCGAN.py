@@ -42,5 +42,6 @@ generator = Generator()
 discriminator = Discriminator()
 
 generator.deconv1 = pretrained_generator.layer1_input
-
-train_gan(discriminator, generator, train_loader, 20, batch_size, .0002, dtype, filename_prefix="trans_DCGAN-")
+d_lr = .0002
+g_lr = d_lr * .01
+train_gan(discriminator, generator, train_loader, 20, batch_size, g_lr, d_lr, dtype, filename_prefix="trans_DCGAN-")
