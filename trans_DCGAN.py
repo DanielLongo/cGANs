@@ -9,7 +9,7 @@ from torchvision import transforms
 
 img_size = 32
 batch_size = 128
-pretrained_generator_filepath = "test_g.pt"
+pretrained_generator_filepath = "cG-mnist.pt"
 
 if torch.cuda.is_available():
     print("Running On GPU :)")
