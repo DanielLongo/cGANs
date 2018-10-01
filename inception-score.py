@@ -5,7 +5,7 @@ from torch.nn import functional as F
 import torch.utils.data
 import torchvision
 from torchvision import transforms
-from trans_DCGAN import generator
+from DCGAN import Discriminator, Generator
 
 # from torchvision.models.inception import inception_v3
 
@@ -56,10 +56,12 @@ def inception_score(imgs, model, batch_size, splits=1):
 
 if __name__ == "__main__":
 	img_size = 32
+	discriminator = Discriminator()
+	discriminator.load_state_dict(torch.load("./transD_mnist.pt"))
 	transform = transforms.Compose([
 		transforms.Resize(img_size),
 		transforms.ToTensor(),
 		transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
 	mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=True, transform=transform)
 
-	score = inception_score(mnist_train, 32)
+	score = inception_score(mnist_train, 32, discriminator)
