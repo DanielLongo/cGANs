@@ -13,13 +13,15 @@ import numpy as np
 from scipy.stats import entropy
 
 def get_preds(x, model):
-	preds  = F.softmax(model(x)).data.cpu().numpy()
+	preds  = F.softmax(model(x))
+	preds= preds.data.cpu().numpy()
 	return preds
 
 def inception_score(imgs, model, batch_size, splits=1):
 	if torch.cuda.is_available():
 		print("Running on a GPU :)")
 		dtype = torch.cuda.FloatTensor
+		model = model.cuda()
 	else:
 		print("Running on a CPU :(")
 		dtype = torch.FloatTensor
@@ -34,9 +36,7 @@ def inception_score(imgs, model, batch_size, splits=1):
 
 	preds = np.zeros((N, 1000))
 	for i, (examples,_) in enumerate(img_loader):
-		print(np.shape(examples))
 		examples = examples.type(dtype)
-		print("HEREREERR")
 		if examples.shape[0] != batch_size:
 			continue
 		preds[i*batch_size:(i*batch_size) + batch_size] = get_preds(examples, inception_model)
@@ -64,4 +64,5 @@ if __name__ == "__main__":
 		transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))])
 	mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=True, transform=transform)
 
-	score = inception_score(mnist_train, 32, discriminator)
+	score = inception_score(mnist_train, discriminator, 32)
+	print(score[0], score[1])
