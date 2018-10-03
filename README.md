@@ -11,6 +11,6 @@
 </tr>
 <tr>
 <td><img src="https://github.com/DanielLongo/cGANs/blob/master/generated_images/0-20.gif"/>
-<td><img height=320 width=320 src="https://github.com/DanielLongo/cGANs/blob/master/generated_images/test-49-23400.png"/>
+<td><img height=320 width=320 src="https://github.com/DanielLongo/cGANs/blob/master/generated_images/cDCGAN/test-49-23400.png"/>
 </tr>
 </table>
