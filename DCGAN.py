@@ -97,10 +97,10 @@ def save_images(generator, epoch, i, filename_prefix):
     plt.close(fig)
 
 
-def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, lr, dtype, filename_prefix="DCGAN-"):
+def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_lr, d_lr, dtype, filename_prefix="DCGAN-"):
     iters = 0
-    d_optimizer = create_optimizer(discriminator, lr=lr, betas=(.5, .999))
-    g_optimizer = create_optimizer(generator, lr=lr, betas=(.5, .999))
+    d_optimizer = create_optimizer(discriminator, lr=d_lr, betas=(.5, .999))
+    g_optimizer = create_optimizer(generator, lr=g_lr, betas=(.5, .999))
     BCELoss = nn.BCELoss()
     for epoch in range(num_epochs):
         for x, _ in image_loader:
@@ -135,8 +135,8 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, lr
     return discriminator, generator
 
 if __name__ == "__main__":
-    discriminator_filename = "test_d"
-    generator_filename = "test_g"
+    discriminator_filename = "D_mnist"
+    generator_filename = "G_mnist"
     batch_size = 128
     img_size = 32
     if torch.cuda.is_available():
@@ -167,5 +167,8 @@ if __name__ == "__main__":
         discriminator.cuda()
         generator.cuda()
 
-    train_gan(discriminator, generator, train_loader, 20, 128, .0002, dtype)
+    discriminator, generator = train_gan(discriminator, generator, train_loader, 10, 128, .0002, .0002, dtype)
+    torch.save(generator.state_dict(), generator_filename + ".pt")
+    torch.save(discriminator.state_dict(), discriminator_filename + ".pt")
+    print("Models Saved")
 

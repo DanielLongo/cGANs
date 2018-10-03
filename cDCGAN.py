@@ -187,7 +187,7 @@ def save_images(generator, epoch, i):
         plt.imshow(sample.reshape(32, 32), cmap='Greys_r')
 
     filename = "test-" + str(epoch) + "-" + str(i) 
-    plt.savefig("./generated_images_EMNIST/" + filename, bbox_inches="tight" )
+    plt.savefig("./generated_images/" + filename, bbox_inches="tight" )
     plt.close(fig)
 
     
@@ -268,8 +268,8 @@ if __name__ == "__main__":
     batch_size = 128
     img_size = 32
     plt.rcParams['image.cmap'] = 'gray'
-    discriminator_filename = "test_d"
-    generator_filename = "test_g"
+    discriminator_filename = "cD-mnist"
+    generator_filename = "cG-mnist"
 
     if torch.cuda.is_available():
         print("Running On GPU :)")
@@ -289,8 +289,7 @@ if __name__ == "__main__":
         transforms.Normalize(mean=(0.5, 0.5, 0.5), std=(0.5, 0.5, 0.5))
         ])
 
-    # mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=True, transform=transform)
-    mnist_train = torchvision.datasets.EMNIST('./EMNIST_data', train=True, download=True, transform=transform, split="letters")
+    mnist_train = torchvision.datasets.MNIST('./MNIST_data', train=True, download=True, transform=transform)
     train_loader = torch.utils.data.DataLoader(mnist_train, batch_size=batch_size, shuffle=True)
     mnist_test = torchvision.datasets.MNIST('./MNIST_data', train=False, download=True, transform=transform)
     test_loader = torch.utils.data.DataLoader(mnist_test, batch_size=batch_size,  shuffle=True) 

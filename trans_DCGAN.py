@@ -9,7 +9,7 @@ from torchvision import transforms
 
 img_size = 32
 batch_size = 128
-pretrained_generator_filepath = "test_g.pt"
+pretrained_generator_filepath = "cG-mnist.pt"
 
 if torch.cuda.is_available():
     print("Running On GPU :)")
@@ -42,5 +42,13 @@ generator = Generator()
 discriminator = Discriminator()
 
 generator.deconv1 = pretrained_generator.layer1_input
-
-train_gan(discriminator, generator, train_loader, 20, batch_size, .0002, dtype, filename_prefix="trans_DCGAN-")
+generator.deconv1.requires_grad = False
+d_lr = .0002
+g_lr = d_lr
+# g_lr = d_lr * .01
+if __name__ == "__main__":
+    discriminator_filename = "transD_mnist"
+    generator_filename = "transG_mnist"
+    discriminator, generator = train_gan(discriminator, generator, train_loader, 10, batch_size, g_lr, d_lr, dtype, filename_prefix="trans_DCGAN-")
+    torch.save(generator.state_dict(), generator_filename + ".pt")
+    torch.save(discriminator.state_dict(), discriminator_filename + ".pt")
