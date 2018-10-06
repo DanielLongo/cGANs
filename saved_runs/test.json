@@ -1,0 +1,1 @@
+"{\"inception_score\": 10, \"lr\": 0.01, \"epochs\": 2, \"timestamp\": 1538803547, \"g_filename\": \"./saved_models/testG.pt\", \"d_filename\": \"./saved_models/testD.pt\"}"

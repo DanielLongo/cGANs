@@ -1,6 +1,7 @@
 import time 
 import random
 import json
+import torch
 
 def save_run(inception_score, lr, epochs, discriminator, generator, filename, g_filename, d_filename):
 	models_filepath = "./saved_models/"
@@ -15,8 +16,8 @@ def save_run(inception_score, lr, epochs, discriminator, generator, filename, g_
 	}
 
 	info_json = json.dumps(info)
-	file = open(filename, "w+")
-	json.dump(info_json, runs_filepath + file + ".json")
+	file = open(runs_filepath + filename + ".json", "w+")
+	json.dump(info_json,  file)
 
 	torch.save(discriminator.state_dict(), models_filepath + d_filename + ".pt")
 	torch.save(generator.state_dict(), models_filepath + g_filename + ".pt")

@@ -268,8 +268,8 @@ if __name__ == "__main__":
     batch_size = 128
     img_size = 32
     plt.rcParams['image.cmap'] = 'gray'
-    discriminator_filename = "cD-mnist"
-    generator_filename = "cG-mnist"
+    discriminator_filename = "./saved_models/cD-mnist"
+    generator_filename = "./saved_models/cG-mnist"
 
     if torch.cuda.is_available():
         print("Running On GPU :)")

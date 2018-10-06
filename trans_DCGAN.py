@@ -2,13 +2,14 @@ import torch
 from DCGAN import train_gan, Discriminator, Generator
 from cDCGAN import ConditionalGenerator
 from utils import save_run
+#from inception-score import inception_score
 import torchvision.datasets
 import torchvision
 from torchvision import transforms
 
 img_size = 32
 batch_size = 128
-pretrained_generator_filepath = "cG-mnist.pt"
+pretrained_generator_filepath = "./saved_models/cG-mnist.pt"
 
 if torch.cuda.is_available():
     print("Running On GPU :)")
@@ -44,12 +45,13 @@ generator.deconv1 = pretrained_generator.layer1_input
 generator.deconv1.requires_grad = False
 
 if __name__ == "__main__":
-    d_filename = "transD_mnist"
-    g_filename = "transG_mnist"
+    d_filename = "testD"
+    g_filename = "testG"
+    filename = "test"
     num_epochs = 2
     g_lr = .0002
     d_lr = .0002
     discriminator, generator = train_gan(discriminator, generator, train_loader, num_epochs, batch_size, g_lr, d_lr, dtype, filename_prefix="trans_DCGAN-")
     print("training finished")
-    save_run(inception_score, lr, num_epochs, discriminator, generator, filename, g_filename, d_filename)
+    save_run(10, .01, num_epochs, discriminator, generator, filename, g_filename, d_filename)
     print("run saved")
