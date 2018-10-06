@@ -1,8 +1,7 @@
 import torch
-# from DCGAN import train_gan
 from DCGAN import train_gan, Discriminator, Generator
-# from DCGAN import Generator
 from cDCGAN import ConditionalGenerator
+from utils import save_run
 import torchvision.datasets
 import torchvision
 from torchvision import transforms
@@ -43,12 +42,14 @@ discriminator = Discriminator()
 
 generator.deconv1 = pretrained_generator.layer1_input
 generator.deconv1.requires_grad = False
-d_lr = .0002
-g_lr = d_lr
-# g_lr = d_lr * .01
+
 if __name__ == "__main__":
-    discriminator_filename = "transD_mnist"
-    generator_filename = "transG_mnist"
-    discriminator, generator = train_gan(discriminator, generator, train_loader, 10, batch_size, g_lr, d_lr, dtype, filename_prefix="trans_DCGAN-")
-    torch.save(generator.state_dict(), generator_filename + ".pt")
-    torch.save(discriminator.state_dict(), discriminator_filename + ".pt")
+    d_filename = "transD_mnist"
+    g_filename = "transG_mnist"
+    num_epochs = 2
+    g_lr = .0002
+    d_lr = .0002
+    discriminator, generator = train_gan(discriminator, generator, train_loader, num_epochs, batch_size, g_lr, d_lr, dtype, filename_prefix="trans_DCGAN-")
+    print("training finished")
+    save_run(inception_score, lr, num_epochs, discriminator, generator, filename, g_filename, d_filename)
+    print("run saved")
