@@ -2,7 +2,7 @@ import torch
 from DCGAN import train_gan, Discriminator, Generator
 from cDCGAN import ConditionalGenerator
 from utils import save_run
-#from inception-score import inception_score
+from inception_score import inception_score
 import torchvision.datasets
 import torchvision
 from torchvision import transforms
@@ -53,5 +53,9 @@ if __name__ == "__main__":
     d_lr = .0002
     discriminator, generator = train_gan(discriminator, generator, train_loader, num_epochs, batch_size, g_lr, d_lr, dtype, filename_prefix="trans_DCGAN-")
     print("training finished")
-    save_run(10, .01, num_epochs, discriminator, generator, filename, g_filename, d_filename)
+    fake_images = []
+    for i in range(16):
+        fake_images += [generator(generate_noise(batch_size))]
+    inception_score = inception_score(fake_images)
+    save_run(inception_score, g_lr, num_epochs, discriminator, generator, filename, g_filename, d_filename)
     print("run saved")
