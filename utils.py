@@ -2,7 +2,6 @@ import time
 import random
 import json
 import torch
-
 def save_run(inception_score, lr, epochs, discriminator, generator, filename, g_filename, d_filename):
 	models_filepath = "./saved_models/"
 	runs_filepath = "./saved_runs/"
@@ -24,7 +23,7 @@ def save_run(inception_score, lr, epochs, discriminator, generator, filename, g_
 
 	print("Run saved")
 
-def generate_nosie(batch_size, dim=100):
+def generate_noise(batch_size, dim=100):
 	noise = torch.randn(batch_size, dim, 1, 1)
 	return noise
 
