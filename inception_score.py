@@ -5,7 +5,7 @@ import torch.nn.functional as F
 from torchvision import transforms
 from torchvision.models import inception_v3
 import numpy as np
-def inception_score(imgs, use_cuda=None):
+def get_inception_score(imgs, use_cuda=None):
 	add_channels = transforms.Compose([
 		transforms.ToPILImage(),
 		transforms.Grayscale(3),

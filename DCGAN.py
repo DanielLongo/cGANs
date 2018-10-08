@@ -97,7 +97,7 @@ def save_images(generator, epoch, i, filename_prefix):
     plt.close(fig)
 
 
-def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_lr, d_lr, dtype, filename_prefix="DCGAN-"):
+def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_lr, d_lr, dtype, filename_prefix="DCGAN-", save_images=True):
     iters = 0
     d_optimizer = create_optimizer(discriminator, lr=d_lr, betas=(.5, .999))
     g_optimizer = create_optimizer(generator, lr=g_lr, betas=(.5, .999))
@@ -127,7 +127,8 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_
             d_cost.backward()
             d_optimizer.step()
             iters += 1
-        save_images(generator, epoch, iters, filename_prefix)
+        if save_images:
+            save_images(generator, epoch, iters, filename_prefix)
         print("Epoch", epoch, "Iter", iters)
         print("d_cost", d_cost)
         print("g_cost", g_cost)

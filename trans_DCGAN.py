@@ -1,12 +1,13 @@
 import torch
 from DCGAN import train_gan, Discriminator, Generator
 from cDCGAN import ConditionalGenerator
-from utils import save_run, generate_noise
-from inception_score import inception_score
+from utils import save_run, generate_noise, read_saved_run, get_random_params, purge_poor_runs
+from inception_score import get_inception_score
 import torchvision.datasets
 import torchvision
 from torchvision import transforms
 import numpy as np
+import time
 
 img_size = 32
 batch_size = 128
@@ -48,16 +49,25 @@ generator.deconv1.requires_grad = False
 if __name__ == "__main__":
     d_filename = "testD"
     g_filename = "testG"
-    filename = "test"
-    num_epochs = 20
-    g_lr = .0002
-    d_lr = .0002
-    discriminator, generator = train_gan(discriminator, generator, train_loader, num_epochs, batch_size, g_lr, d_lr, dtype, filename_prefix="trans_DCGAN-")
+    filename = "transfer"
+    filenames = []
+    num_epochs = 0
+    random_lrs = get_random_params(.00002, .0002, 5)
+    run_stats = []
+    for lr in random_lrs:
+        print('lr', lr)
+        cur_filename_info = str(lr) + "-" + str(num_epochs) + "-" + str(int(time.time()))
+        cur_filename = filename + "-" + cur_filename_info 
+        filenames += [cur_filename]
+        cur_g_filename = g_filename + "-" + cur_filename_info
+        cur_d_filename = d_filename + "-" + cur_filename_info
+        discriminator, generator = train_gan(discriminator, generator, train_loader, num_epochs, batch_size, lr, lr, dtype, filename_prefix="trans_DCGAN-", save_images=False)
+        fake_images = []
+        for i in range(16):
+            fake_images += [generator(generate_noise(4))]
+        inception_score = get_inception_score(fake_images)
+        stats = save_run(inception_score, lr, num_epochs, discriminator, generator, cur_filename, cur_g_filename, cur_d_filename)
+        run_stats += [stats]
+    print(run_stats)
+    purge_poor_runs([], "./saved_runs/", purge_all=True)
     print("training finished")
-    fake_images = []
-    for i in range(16):
-        fake_images += [generator(generate_noise(4))]
-      #  print(np.shape(fake_images[-1]))
-    inception_score = inception_score(fake_images)
-    save_run(inception_score, g_lr, num_epochs, discriminator, generator, filename, g_filename, d_filename)
-    print("run saved")
