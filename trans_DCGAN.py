@@ -51,8 +51,8 @@ if __name__ == "__main__":
     g_filename = "testG"
     filename = "transfer"
     filenames = []
-    num_epochs = 0
-    random_lrs = get_random_params(.00002, .0002, 5)
+    num_epochs = 10
+    random_lrs = get_random_params(.00002, .0002, 10)
     run_stats = []
     for lr in random_lrs:
         print('lr', lr)
@@ -69,5 +69,5 @@ if __name__ == "__main__":
         stats = save_run(inception_score, lr, num_epochs, discriminator, generator, cur_filename, cur_g_filename, cur_d_filename)
         run_stats += [stats]
     print(run_stats)
-    purge_poor_runs([], "./saved_runs/", purge_all=True)
+    purge_poor_runs(filenames, "./saved_runs/", purge_all=True)
     print("training finished")

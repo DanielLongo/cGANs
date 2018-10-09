@@ -111,12 +111,16 @@ class ConditionalGenerator(nn.Module):
     # initializers
     def __init__(self):
         super(ConditionalGenerator, self).__init__()
-        self.layer1_input = nn.Sequential(
-            nn.ConvTranspose2d(100, 256, [4,4], stride=[1,1]),
+        self.input_layer1 = nn.Sequential(
+            nn.ConvTranspose2d(100, 128, [2,2], stride=[1,1]),
+            nn.BatchNorm2d(128),
+            nn.ReLU())
+        self.input_layer2 = nn.Sequential(
+            nn.ConvTranspose2d(128, 256, [3,3], stride=[1,1]),
             nn.BatchNorm2d(256),
             nn.ReLU())
-        self.layer1_labels = nn.Sequential(
-            nn.ConvTranspose2d(10, 256, [4,4], stride=[1,1]),
+        self.labels_layer1 = nn.Sequential(
+            nn.ConvTranspose2d(10, 256, [4,4],  stride=[1,1]),
             nn.BatchNorm2d(256),
             nn.ReLU())
         self.layer2 = nn.Sequential(
@@ -131,8 +135,9 @@ class ConditionalGenerator(nn.Module):
             nn.Tanh())
 
     def forward(self, input, labels):
-        x = self.layer1_input(input)
-        y = self.layer1_labels(labels)
+        x = self.input_layer1(input)
+        x = self.input_layer2(x)
+        y = self.labels_layer1(labels)
         out = torch.cat([x, y], 1)
         out = self.layer2(out)
         out = self.layer3(out)

@@ -1,4 +1,5 @@
 import torch
+import time
 from torch import nn
 import torchvision.datasets
 from torchvision import transforms
@@ -6,6 +7,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
+from utils import save_run, generate_noise, read_saved_run, get_random_params, purge_poor_runs
 plt.rcParams['image.cmap'] = 'gray'
 
 def generate_nosie(batch_size, dim=100):
@@ -43,17 +45,21 @@ class Generator(nn.Module):
     def __init__(self):
         super(Generator, self).__init__()
         self.deconv1 = nn.Sequential(
-            nn.ConvTranspose2d(100, 256, [4,4], stride=[1,1]),
-            nn.BatchNorm2d(256),
+            nn.ConvTranspose2d(100, 128, [2,2], stride=[1,1]),
+            nn.BatchNorm2d(128),
             nn.ReLU())
         self.deconv2 = nn.Sequential(
-            nn.ConvTranspose2d(256, 256, [4,4], stride=[2,2], padding=1),
+            nn.ConvTranspose2d(128, 256, [3,3], stride=[1,1]),
             nn.BatchNorm2d(256),
             nn.ReLU())
         self.deconv3 = nn.Sequential(
+            nn.ConvTranspose2d(256, 256, [4,4], stride=[2,2], padding=1),
+            nn.BatchNorm2d(256),
+            nn.ReLU())
+        self.deconv4 = nn.Sequential(
             nn.ConvTranspose2d(256, 128, [4,4], stride=[2,2], padding=1),
             nn.BatchNorm2d(128))
-        self.deconv4 = nn.Sequential(
+        self.deconv5 = nn.Sequential(
             nn.ConvTranspose2d(128, 1, [4,4], stride=[2,2], padding=1),
             nn.Tanh())
 
@@ -62,6 +68,7 @@ class Generator(nn.Module):
         out = self.deconv2(out)
         out = self.deconv3(out)
         out = self.deconv4(out)
+        out = self.deconv5(out)
         return out
 
 
@@ -136,10 +143,12 @@ def train_gan(discriminator, generator, image_loader, num_epochs, batch_size, g_
     return discriminator, generator
 
 if __name__ == "__main__":
-    discriminator_filename = "D_mnist"
-    generator_filename = "G_mnist"
+    filename = "dcgan"
+    d_filename = "D_mnist"
+    g_filename = "G_mnist"
     batch_size = 128
     img_size = 32
+    num_epochs = 10
     if torch.cuda.is_available():
         print("Running On GPU :)")
         torch.set_default_tensor_type("torch.cuda.FloatTensor")
@@ -162,14 +171,34 @@ if __name__ == "__main__":
     mnist_test = torchvision.datasets.EMNIST('./EMNIST_data', train=False, download=True, transform=transform, split="letters")
     test_loader = torch.utils.data.DataLoader(mnist_test, batch_size=batch_size,  shuffle=True)
 
+
+    # discriminator, generator = train_gan(discriminator, generator, train_loader, 10, 128, .0002, .0002, dtype)
+    # torch.save(generator.state_dict(), generator_filename + ".pt")
+    # torch.save(discriminator.state_dict(), discriminator_filename + ".pt")
     discriminator = Discriminator()
     generator = Generator()
     if use_cuda:
         discriminator.cuda()
         generator.cuda()
+        generator = Generator()
 
-    discriminator, generator = train_gan(discriminator, generator, train_loader, 10, 128, .0002, .0002, dtype)
-    torch.save(generator.state_dict(), generator_filename + ".pt")
-    torch.save(discriminator.state_dict(), discriminator_filename + ".pt")
-    print("Models Saved")
-
+    random_lrs = get_random_params(.00002, .002, 10)
+    run_stats = []
+    filenames = []
+    for lr in random_lrs:
+        print('lr', lr)
+        cur_filename_info = str(lr) + "-" + str(num_epochs) + "-" + str(int(time.time()))
+        cur_filename = filename + "-" + cur_filename_info 
+        filenames += [cur_filename]
+        cur_g_filename = g_filename + "-" + cur_filename_info
+        cur_d_filename = d_filename + "-" + cur_filename_info
+        discriminator, generator = train_gan(discriminator, generator, train_loader, num_epochs, batch_size, lr, lr, dtype, save_images=False)
+        fake_images = []
+        for i in range(16):
+            fake_images += [generator(generate_noise(4))]
+        inception_score = get_inception_score(fake_images)
+        stats = save_run(inception_score, lr, num_epochs, discriminator, generator, cur_filename, cur_g_filename, cur_d_filename)
+        run_stats += [stats]
+    print(run_stats)
+    purge_poor_runs(saved_runs, "./saved_runs/")
+    print("training finished")
