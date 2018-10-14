@@ -8,6 +8,7 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 from utils import save_run, generate_noise, read_saved_run, get_random_params, purge_poor_runs
+from inception_score import get_inception_score
 plt.rcParams['image.cmap'] = 'gray'
 
 def generate_nosie(batch_size, dim=100):
@@ -148,7 +149,7 @@ if __name__ == "__main__":
     g_filename = "G_mnist"
     batch_size = 128
     img_size = 32
-    num_epochs = 10
+    num_epochs = 0
     if torch.cuda.is_available():
         print("Running On GPU :)")
         torch.set_default_tensor_type("torch.cuda.FloatTensor")
@@ -175,12 +176,14 @@ if __name__ == "__main__":
     # discriminator, generator = train_gan(discriminator, generator, train_loader, 10, 128, .0002, .0002, dtype)
     # torch.save(generator.state_dict(), generator_filename + ".pt")
     # torch.save(discriminator.state_dict(), discriminator_filename + ".pt")
+    torch.backends.cudnn.benchmark = True
     discriminator = Discriminator()
     generator = Generator()
     if use_cuda:
+        torch.backends.cudnn.benchmark = True
         discriminator.cuda()
         generator.cuda()
-        generator = Generator()
+        torch.backends.cudnn.benchmark = True
 
     random_lrs = get_random_params(.00002, .002, 10)
     run_stats = []
@@ -200,5 +203,5 @@ if __name__ == "__main__":
         stats = save_run(inception_score, lr, num_epochs, discriminator, generator, cur_filename, cur_g_filename, cur_d_filename)
         run_stats += [stats]
     print(run_stats)
-    purge_poor_runs(saved_runs, "./saved_runs/")
+    purge_poor_runs([], "./saved_runs/",purge_all=False)
     print("training finished")
