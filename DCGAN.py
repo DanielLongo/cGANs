@@ -149,7 +149,7 @@ if __name__ == "__main__":
     g_filename = "G_mnist"
     batch_size = 128
     img_size = 32
-    num_epochs = 0
+    num_epochs = 10
     if torch.cuda.is_available():
         print("Running On GPU :)")
         torch.set_default_tensor_type("torch.cuda.FloatTensor")
@@ -191,7 +191,7 @@ if __name__ == "__main__":
     for lr in random_lrs:
         print('lr', lr)
         cur_filename_info = str(lr) + "-" + str(num_epochs) + "-" + str(int(time.time()))
-        cur_filename = filename + "-" + cur_filename_info 
+        cur_filename = filename + "-" + cur_filename_info
         filenames += [cur_filename]
         cur_g_filename = g_filename + "-" + cur_filename_info
         cur_d_filename = d_filename + "-" + cur_filename_info
@@ -200,6 +200,7 @@ if __name__ == "__main__":
         for i in range(16):
             fake_images += [generator(generate_noise(4))]
         inception_score = get_inception_score(fake_images)
+        print("inception score", inception_score)
         stats = save_run(inception_score, lr, num_epochs, discriminator, generator, cur_filename, cur_g_filename, cur_d_filename)
         run_stats += [stats]
     print(run_stats)

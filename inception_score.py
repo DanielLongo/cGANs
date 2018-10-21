@@ -16,6 +16,7 @@ def get_inception_score(imgs, use_cuda=None):
 	if torch.cuda.is_available() and use_cuda != False:
 		net = net.cuda()
 	elif (torch.cuda.is_available() == False) and use_cuda == False:
+		print("not using cuda")
 		use_cuda = False
 	else:
 		print("Cuda not availiabe but use_cuda is True")
