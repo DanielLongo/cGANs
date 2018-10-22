@@ -3,6 +3,7 @@ import random
 import json
 import torch
 import os
+from mnist_classifier import Net
 def save_run(inception_score, lr, epochs, discriminator, generator, filename, g_filename, d_filename):
 	models_filepath = "./saved_models/"
 	runs_filepath = "./saved_runs/"
@@ -77,3 +78,8 @@ def get_random_params(min, max, num_values):
 		#not all values unique, try again
 		return get_random_params(min, max,  num_values)
 	return values
+
+def get_mnist_classifer(filepath="./saved_models/mnist_classifer.pt"):
+	net = Net()
+	net.load_state_dict(torch.load(filepath))
+	return net

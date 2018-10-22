@@ -65,6 +65,7 @@ class Generator(nn.Module):
             nn.Tanh())
 
     def forward(self, x):
+        # print("x", x.shape)
         out = self.deconv1(x)
         out = self.deconv2(out)
         out = self.deconv3(out)

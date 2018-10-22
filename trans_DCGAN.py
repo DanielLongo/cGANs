@@ -1,8 +1,8 @@
 import torch
 from DCGAN import train_gan, Discriminator, Generator
 from cDCGAN import ConditionalGenerator
-from utils import save_run, generate_noise, read_saved_run, get_random_params, purge_poor_runs
-from inception_score import get_inception_score
+from utils import save_run, generate_noise, read_saved_run, get_random_params, purge_poor_runs, get_mnist_classifer
+from inception_score_mnist import get_inception_score
 import torchvision.datasets
 import torchvision
 from torchvision import transforms
@@ -16,7 +16,7 @@ pretrained_generator_filepath = "./saved_models/cG-mnist.pt"
 if torch.cuda.is_available():
     print("Running On GPU :)")
     torch.set_default_tensor_type("torch.cuda.FloatTensor")
-    torch.backends.cudnn.benchmark = True
+    torch.backends.cudnn.benchmark = False
     dtype = torch.cuda.FloatTensor
     use_cuda = True
 else:
@@ -43,8 +43,11 @@ pretrained_generator.load_state_dict(torch.load(pretrained_generator_filepath))
 generator = Generator()
 discriminator = Discriminator()
 
-generator.deconv1 = pretrained_generator.layer1_input
+generator.deconv1 = pretrained_generator.input_layer1
 generator.deconv1.requires_grad = False
+generator.deconv2 = pretrained_generator.input_layer2
+generator.deconv2.requires_grad = False
+
 
 if __name__ == "__main__":
     d_filename = "testD"
@@ -66,6 +69,7 @@ if __name__ == "__main__":
         for i in range(16):
             fake_images += [generator(generate_noise(4))]
         inception_score = get_inception_score(fake_images)
+        print(inception_score)
         stats = save_run(inception_score, lr, num_epochs, discriminator, generator, cur_filename, cur_g_filename, cur_d_filename)
         run_stats += [stats]
     print(run_stats)
