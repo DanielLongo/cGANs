@@ -16,7 +16,7 @@ pretrained_generator_filepath = "./saved_models/cG-mnist.pt"
 if torch.cuda.is_available():
     print("Running On GPU :)")
     torch.set_default_tensor_type("torch.cuda.FloatTensor")
-    torch.backends.cudnn.benchmark = False
+    torch.backends.cudnn.benchmark = True
     dtype = torch.cuda.FloatTensor
     use_cuda = True
 else:
@@ -44,18 +44,18 @@ generator = Generator()
 discriminator = Discriminator()
 
 generator.deconv1 = pretrained_generator.input_layer1
-generator.deconv1.requires_grad = False
+# generator.deconv1.requires_grad = False
 generator.deconv2 = pretrained_generator.input_layer2
-generator.deconv2.requires_grad = False
+# generator.deconv2.requires_grad = False
 
 
 if __name__ == "__main__":
     d_filename = "testD"
     g_filename = "testG"
-    filename = "transfer"
+    filename = "trans-lowlr"
     filenames = []
     num_epochs = 10
-    random_lrs = get_random_params(.00002, .0002, 10)
+    random_lrs = get_random_params(.00002, .0002, 100)
     run_stats = []
     for lr in random_lrs:
         print('lr', lr)
@@ -64,7 +64,7 @@ if __name__ == "__main__":
         filenames += [cur_filename]
         cur_g_filename = g_filename + "-" + cur_filename_info
         cur_d_filename = d_filename + "-" + cur_filename_info
-        discriminator, generator = train_gan(discriminator, generator, train_loader, num_epochs, batch_size, lr, lr, dtype, filename_prefix="trans_DCGAN-", save_images=False)
+        discriminator, generator = train_gan(discriminator, generator, train_loader, num_epochs, batch_size, lr*.01, lr, dtype, filename_prefix="trans_DCGAN-", save_images=False)
         fake_images = []
         for i in range(16):
             fake_images += [generator(generate_noise(4))]
@@ -73,5 +73,5 @@ if __name__ == "__main__":
         stats = save_run(inception_score, lr, num_epochs, discriminator, generator, cur_filename, cur_g_filename, cur_d_filename)
         run_stats += [stats]
     print(run_stats)
-    purge_poor_runs(filenames, "./saved_runs/", purge_all=True)
-    print("training finished")
+    purge_poor_runs("./saved_runs/", purge_all=True, start_with=["trans-freeze"])
+    # purge_poor_runs(filenames, "./saved_runs/")

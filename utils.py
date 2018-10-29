@@ -4,11 +4,11 @@ import json
 import torch
 import os
 from mnist_classifier import Net
-def save_run(inception_score, lr, epochs, discriminator, generator, filename, g_filename, d_filename):
+def save_run(kl, lr, epochs, discriminator, generator, filename, g_filename, d_filename):
 	models_filepath = "./saved_models/"
 	runs_filepath = "./saved_runs/"
 	info = {
-		"inception_score" : inception_score,
+		"kl" : kl,
 		"lr" : lr,
 		"epochs" : epochs,
 		"timestamp" : int(time.time()),
@@ -33,25 +33,62 @@ def read_saved_run(filename, filepath="./saved_runs/"):
 		data = json.loads(data) #reads string to dict
 	return data
 
-def purge_poor_runs(filenames, path, purge_all=False):
+
+def get_filenames(path, start_with):
+	files = os.listdir(path)
+	if start_with == "":
+		return files
+	else:
+		final = []
+		for file in files:
+			filename = file
+			prefix = filename[:len(start_with[0])]
+			for start in start_with:
+				if start == prefix:
+					final += [file]
+					break
+		return final
+
+def purge_poor_runs(path, filenames=[], purge_all=False, start_with=[""]):
 	if len(filenames) == 0 and purge_all == False:
 		print("print no files to purge")
 		return
 	elif purge_all == True:
-		filenames = os.listdir(path)
-	max_inception = 0
-	argmax_inception = ""
+		filenames = get_filenames(path, start_with)
+		if len(filenames) == 0:
+			print("Invalid start_with")
+			return
+
+	min_dist = 99999
+	argmin_dist = ""
+	if filenames[0][-5:] != ".json":
+		for i in range(len(filenames)):
+			filenames[i] += ".json"
+			print(filenames[i])
+
 	for file in filenames:
 		cur_stats = read_saved_run(file.split(".json")[0])
-		if cur_stats["inception_score"] > max_inception:
-			argmax_inception = file
+		try:
+			if cur_stats["kl"] < min_dist:
+				min_dist = cur_stats["kl"]
+				argmin_dist = file
+		except KeyError:
+			continue
 
 	for file in filenames:
-		if file == argmax_inception:
+		if file == argmin_dist:
 			continue
-		os.remove(path + file)
+		g_file, d_file = read_saved_run(file.split(".json")[0])["g_filename"], read_saved_run(file.split(".json")[0])["d_filename"]
+		try:
+			os.remove(path + file)
+			os.remove(g_file)
+			os.remove(d_file)
+		except FileNotFoundError:
+			print("FileNotFoundError")
+			continue
 
-	print("runs purged")
+
+	print("Runs Purged")
 
 
 def generate_noise(batch_size, dim=100):
@@ -71,7 +108,7 @@ def get_random_params(min, max, num_values):
 	values = []
 	for i in range(num_values):
 		value = random.uniform(min, max)
-		value = float("%.6f" % value)
+		value = float("%.7f" % value)
 		values += [value]
 
 	if len(values) > len(set(values)):
